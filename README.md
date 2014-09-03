@@ -61,3 +61,6 @@ xorshift4096\* implementation. Passes BigCrunch, same speed as xorshift1204\*,
 but much longer period and bigger state buffer for applications that might
 need it.
 
+# Documentation
+
+You can browse the package documentation online at http://godoc.org/github.com/wildservices/rand64
