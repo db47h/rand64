@@ -2,11 +2,13 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package rand64_test
+package xorshift_test
 
 import (
 	"fmt"
 	"math/rand"
+	"testing"
+
 	"github.com/wildservices/rand64"
 	"github.com/wildservices/rand64/xorshift"
 )
@@ -15,8 +17,39 @@ const (
 	SEED1 = 1387366483214
 )
 
+/* Benchmarks */
+
+func BenchmarkXorShift64star(b *testing.B) {
+	s := xorshift.New64star(SEED1)
+	for i := 0; i < b.N; i++ {
+		_ = s.Uint64()
+	}
+}
+
+func BenchmarkXorShift128plus(b *testing.B) {
+	s := xorshift.New128plus(SEED1)
+	for i := 0; i < b.N; i++ {
+		_ = s.Uint64()
+	}
+}
+
+func BenchmarkXorShift1024star(b *testing.B) {
+	s := xorshift.New1024star(SEED1)
+	for i := 0; i < b.N; i++ {
+		_ = s.Uint64()
+	}
+}
+
+func BenchmarkRandSource(b *testing.B) {
+	s := rand.NewSource(SEED1)
+	for i := 0; i < b.N; i++ {
+		_ = s.Int63()
+	}
+}
+
+/* Tests */
 func Example() {
-	// simple testing function 
+	// simple testing function
 	// takes a rand64.Source64 and gets a bunch of numbers using
 	// math.rand and rand64
 	testfunc := func(name string, s rand64.Source64) {
@@ -32,7 +65,7 @@ func Example() {
 		}
 		fmt.Println("")
 		// Play craps
-		for i:= 0; i < 10; i++ {
+		for i := 0; i < 10; i++ {
 			fmt.Printf(" %d%d", r64.Uintn(6)+1, r64.Uintn(6)+1)
 		}
 		fmt.Println("")
@@ -58,7 +91,7 @@ func Example() {
 	s = xorshift.New1024star(SEED1)
 	testfunc("xorshift1024*", s)
 
-	// Output: 
+	// Output:
 	// xorshift64*
 	//  4252968640 1567930103 1103871594 100834224
 	//  11703131014891570448 16052167272083700520 16375787158461752832 555913475760386374
