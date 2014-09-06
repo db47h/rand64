@@ -31,6 +31,8 @@ is used internally to seed the state buffers for the other algorithms. Using
 it as a general purpose PRNG is however not recommended since xorshift128+ is
 noticably faster with better output quality and a much longer period.
 
+PRNGs are created by calling New<algorithm name>() and must be seeded before use.
+
 Benchmarks
 
 The last result is for the default PRNG provided by rand.NewSource() for comparison:
@@ -60,7 +62,8 @@ func seedArray(dst, src []uint64) {
 		if i > 0 {
 			seed = dst[i-1]
 		}
-		s64 := New64star(seed)
+		s64 := New64star()
+		s64.Seed64(seed)
 		for ; i < len(dst); i++ {
 			dst[i] = s64.Uint64()
 		}
@@ -73,12 +76,10 @@ func seedArray(dst, src []uint64) {
 // xorshift1024* (for speed and very long period) generator.
 type xs64star uint64
 
-// New64star returns a new pseudo-random Source64 using the xorshift64* algorithm
-// seeded with the given value.
-func New64star(seed uint64) rand64.Source64 {
-	var xs64 xs64star
-	xs64.Seed64(seed)
-	return &xs64
+// New64star returns a new pseudo-random number Source64 using the xorshift64* algorithm.
+func New64star() rand64.Source64 {
+	var rng xs64star
+	return &rng
 }
 
 // Seed64 uses the provided uint64 seed value to initialize the generator to a deterministic state.
@@ -95,8 +96,8 @@ func (s *xs64star) Seed(seed int64) {
 	s.Seed64(uint64(seed))
 }
 
-// SeedBySlice seeds the generator's state buffer with values from the array argument.
-func (s *xs64star) SeedBySlice(seed []uint64) {
+// SeedFromSlice seeds the generator's state buffer with values from the array argument.
+func (s *xs64star) SeedFromSlice(seed []uint64) {
 	if len(seed) == 0 {
 		s.Seed64(0)
 	} else {
@@ -125,22 +126,18 @@ func (s *xs64star) Int63() int64 {
 // errors, but due to the relatively short period it is acceptable only
 // for applications with a very mild amount of parallelism; otherwise, use
 // a xorshift1024* generator
-type xs128plus struct {
-	s [2]uint64
-}
+type xs128plus [2]uint64
 
-// New128plus returns a new pseudo-random Source64 using the xorshift128+ algorithm
-// seeded with the given value.
-func New128plus(seed uint64) rand64.Source64 {
+// New128plus returns a new pseudo-random number Source64 using the xorshift128+ algorithm.
+func New128plus() rand64.Source64 {
 	var rng xs128plus
-	rng.Seed64(seed)
 	return &rng
 }
 
 // Seed64 uses the provided uint64 seed value to initialize the generator to a deterministic state.
 func (rng *xs128plus) Seed64(seed uint64) {
 	// The state must be seeded so that it is not everywhere zero.
-	rng.SeedBySlice([]uint64{seed}) // TODO: a better way to setup s[]?
+	rng.SeedFromSlice([]uint64{seed}) // TODO: a better way to setup s[]?
 }
 
 // Seed uses the provided int64 seed value to initialize the generator to a deterministic state.
@@ -149,54 +146,52 @@ func (rng *xs128plus) Seed(seed int64) {
 	rng.Seed64(uint64(seed))
 }
 
-// SeedBySlice seeds the generator's state buffer with values from the array argument.
-func (rng *xs128plus) SeedBySlice(seed []uint64) {
-	seedArray(rng.s[:], seed)
+// SeedFromSlice seeds the generator's state buffer with values from the array argument.
+func (rng *xs128plus) SeedFromSlice(seed []uint64) {
+	seedArray(rng[:], seed)
 }
 
 // Uint64 returns an unsigned pseudo-random 64-bit integer.
 func (rng *xs128plus) Uint64() uint64 {
-	s1 := rng.s[0]
-	s0 := rng.s[1]
-	rng.s[0] = s0
-	s1 ^= s1 << 23                                 // a
-	rng.s[1] = (s1 ^ s0 ^ (s1 >> 17) ^ (s0 >> 26)) // b, c
-	return rng.s[1] + s0
+	s1 := rng[0]
+	s0 := rng[1]
+	rng[0] = s0
+	s1 ^= s1 << 23                               // a
+	rng[1] = (s1 ^ s0 ^ (s1 >> 17) ^ (s0 >> 26)) // b, c
+	return rng[1] + s0
 }
 
 // Int63 returns a non-negative pseudo-random 63-bit integer as an int64.
 func (rng *xs128plus) Int63() int64 {
-	s1 := rng.s[0]
-	s0 := rng.s[1]
-	rng.s[0] = s0
-	s1 ^= s1 << 23                                 // a
-	rng.s[1] = (s1 ^ s0 ^ (s1 >> 17) ^ (s0 >> 26)) // b, c
-	return int64((rng.s[1] + s0) >> 1)
+	s1 := rng[0]
+	s0 := rng[1]
+	rng[0] = s0
+	s1 ^= s1 << 23                               // a
+	rng[1] = (s1 ^ s0 ^ (s1 >> 17) ^ (s0 >> 26)) // b, c
+	return int64((rng[1] + s0) >> 1)
 }
 
 // xorshift1024*
 // This is a fast, top-quality generator. If 1024 bits of state are too
 // much, try a xorshift128+ or a xorshift64* generator.
 type xs1024star struct {
-	s [16]uint64
-	p int
+	state [16]uint64
+	p     int
 }
 
-// New1024star returns a new pseudo-random Source64 using the xorshift1024* algorithm
-// seeded with the given value.
-func New1024star(seed uint64) rand64.Source64 {
-	var rng xs1024star
-	rng.Seed64(seed)
-	return &rng
+// New1024star returns a new pseudo-random number Source64 using the xorshift1024* algorithm.
+func New1024star() rand64.Source64 {
+	return &xs1024star{}
 }
 
 // Seed64 uses the provided uint64 seed value to initialize the generator to a deterministic state.
 func (rng *xs1024star) Seed64(seed uint64) {
 	// The state must be seeded so that it is not everywhere zero.
 	// We use xorshit64* to seed the state
-	xs64 := New64star(seed)
-	for p := range rng.s {
-		rng.s[p] = xs64.Uint64()
+	xs64 := New64star()
+	xs64.Seed64(seed)
+	for p := range rng.state {
+		rng.state[p] = xs64.Uint64()
 	}
 }
 
@@ -206,14 +201,14 @@ func (rng *xs1024star) Seed(seed int64) {
 	rng.Seed64(uint64(seed))
 }
 
-// SeedBySlice seeds the generator's state buffer with values from the array argument.
-func (rng *xs1024star) SeedBySlice(seed []uint64) {
-	seedArray(rng.s[:], seed)
+// SeedFromSlice seeds the generator's state buffer with values from the array argument.
+func (rng *xs1024star) SeedFromSlice(seed []uint64) {
+	seedArray(rng.state[:], seed)
 }
 
 // Uint64 returns an unsigned pseudo-random 64-bit integer.
 func (rng *xs1024star) Uint64() uint64 {
-	s := rng.s[:]
+	s := rng.state[:]
 	s0 := s[rng.p]
 	rng.p = (rng.p + 1) & 15
 	s1 := s[rng.p]
@@ -226,7 +221,7 @@ func (rng *xs1024star) Uint64() uint64 {
 
 // Int63 returns a non-negative pseudo-random 63-bit integer as an int64.
 func (rng *xs1024star) Int63() int64 {
-	s := rng.s[:]
+	s := rng.state[:]
 	s0 := s[rng.p]
 	rng.p = (rng.p + 1) & 15
 	s1 := s[rng.p]

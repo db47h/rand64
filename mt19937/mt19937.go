@@ -13,7 +13,7 @@ More information on the Mersenne Twister algorithm and other implementations
 are available from
 http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/emt.html
 
-See included LICENSE_MT for original C code and license (BSD).
+See included LICENSE_MT for original C code and license.
 */
 package mt19937
 
@@ -25,6 +25,7 @@ const (
 	_MATRIX_A = 0xB5026F5AA96619E9
 	_UM       = 0xFFFFFFFF80000000 // Most significant 33 bits
 	_LM       = 0x7FFFFFFF         // Least significant 31 bits
+	_NSEED    = _NN + 1            // index==NN+1 means mt[NN] is not initialized
 )
 
 var mag01 [2]uint64 = [...]uint64{
@@ -33,33 +34,31 @@ var mag01 [2]uint64 = [...]uint64{
 }
 
 type mt19937 struct {
-	mt  [_NN]uint64 // State vector
-	mti uint64      // mti==NN+1 means mt[NN] is not initialized
+	state [_NN]uint64 // State vector
+	index uint64
 }
 
-// New returns a new pseudo-random Source64 using the MT19937 algorithm seeded with the given value.
-//
-// If Seed is 0, a default seed will be used (5489).
-func New(seed uint64) rand64.Source64 {
-	var mt mt19937
-	mt.Seed64(seed)
-	return &mt
+// New returns a new pseudo-random Source64 using the MT19937 algorithm.
+func New() rand64.Source64 {
+	return &mt19937{index: _NSEED}
 }
 
 // Seed64 uses the provided uint64 seed value to initialize the generator to a deterministic state
+//
+// If Seed is 0, a default seed will be used (5489).
 func (rng *mt19937) Seed64(seed uint64) {
-	var mti uint64
-	mt := rng.mt[:]
+	var i uint64
+	mt := rng.state[:]
 
 	if seed == 0 {
 		seed = 5489 // same default seed as original C code
 	}
 
 	mt[0] = seed
-	for mti = 1; mti < _NN; mti++ {
-		mt[mti] = 6364136223846793005*(mt[mti-1]^(mt[mti-1]>>62)) + mti
+	for i = 1; i < _NN; i++ {
+		mt[i] = 6364136223846793005*(mt[i-1]^(mt[i-1]>>62)) + i
 	}
-	rng.mti = mti
+	rng.index = i
 }
 
 // Seed uses the provided int64 seed value to initialize the generator to a deterministic state.
@@ -69,11 +68,11 @@ func (rng *mt19937) Seed(seed int64) {
 }
 
 // SeedBySlice initializes the state array with data from slice key
-func (rng *mt19937) SeedBySlice(key []uint64) {
+func (rng *mt19937) SeedFromSlice(key []uint64) {
 	var i uint64 = 1
 	var j uint64
 	var k uint64 = uint64(len(key))
-	mt := rng.mt[:]
+	mt := rng.state[:]
 
 	rng.Seed64(19650218)
 
@@ -107,13 +106,13 @@ func (rng *mt19937) SeedBySlice(key []uint64) {
 func (rng *mt19937) Uint64() uint64 {
 	var i int
 	var x uint64
-	mt := rng.mt[:]
-	mti := rng.mti
+	mt := rng.state[:]
+	mti := rng.index
 
 	if mti >= _NN { // generate _NN words at once
-		// if Seed64 has not been called, panic. This can't happen
-		if mti == _NN+1 {
-			panic("MT19937 unseeded")
+		// seed if needed
+		if mti == _NSEED {
+			rng.Seed64(5489)
 		}
 
 		for i = 0; i < _NN-_MM; i++ {
@@ -137,7 +136,7 @@ func (rng *mt19937) Uint64() uint64 {
 	x ^= (x << 37) & 0xFFF7EEE000000000
 	x ^= (x >> 43)
 
-	rng.mti = mti + 1
+	rng.index = mti + 1
 
 	return x
 }

@@ -19,8 +19,8 @@ func ExampleMt19937_Uint64() {
 	init := []uint64{
 		0x12345, 0x23456, 0x34567, 0x45678,
 	}
-	mt := mt19937.New(0)
-	mt.SeedBySlice(init)
+	mt := mt19937.New()
+	mt.SeedFromSlice(init)
 
 	fmt.Println("10 outputs of mt19937.Uint64()")
 	for i := 0; i < 10; i++ {
@@ -52,7 +52,8 @@ func ExampleMt19937_Uint64() {
 /* Benchmarks */
 
 func BenchmarkMt19937(b *testing.B) {
-	s := mt19937.New(SEED1)
+	s := mt19937.New()
+	s.Seed64(SEED1)
 	for i := 0; i < b.N; i++ {
 		_ = s.Uint64()
 	}

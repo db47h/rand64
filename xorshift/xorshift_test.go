@@ -20,21 +20,24 @@ const (
 /* Benchmarks */
 
 func BenchmarkXorShift64star(b *testing.B) {
-	s := xorshift.New64star(SEED1)
+	s := xorshift.New64star()
+	s.Seed64(SEED1)
 	for i := 0; i < b.N; i++ {
 		_ = s.Uint64()
 	}
 }
 
 func BenchmarkXorShift128plus(b *testing.B) {
-	s := xorshift.New128plus(SEED1)
+	s := xorshift.New128plus()
+	s.Seed64(SEED1)
 	for i := 0; i < b.N; i++ {
 		_ = s.Uint64()
 	}
 }
 
 func BenchmarkXorShift1024star(b *testing.B) {
-	s := xorshift.New1024star(SEED1)
+	s := xorshift.New1024star()
+	s.Seed64(SEED1)
 	for i := 0; i < b.N; i++ {
 		_ = s.Uint64()
 	}
@@ -78,17 +81,21 @@ func Example() {
 		fmt.Println("")
 	}
 
-	// create a new xorshift64+ source and seed it
+	// create a new xorshift64+ source
+	s := xorshift.New64star()
+	// Seed it before use
 	// Typically a non-fixed seed should be used, such as time.Now().UnixNano().
 	// Using a fixed seed will produce the same output on every run.
-	s := xorshift.New64star(SEED1)
+	s.Seed64(SEED1)
 
 	testfunc("xorshift64*", s)
 
 	// test the other two PRNGs
-	s = xorshift.New128plus(SEED1)
+	s = xorshift.New128plus()
+	s.Seed64(SEED1)
 	testfunc("xorshift128+", s)
-	s = xorshift.New1024star(SEED1)
+	s = xorshift.New1024star()
+	s.Seed64(SEED1)
 	testfunc("xorshift1024*", s)
 
 	// Output:

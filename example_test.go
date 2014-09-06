@@ -6,9 +6,9 @@ package rand64_test
 
 import (
 	"fmt"
-	"math/rand"
 	"github.com/wildservices/rand64"
 	"github.com/wildservices/rand64/xorshift"
+	"math/rand"
 )
 
 const (
@@ -16,7 +16,7 @@ const (
 )
 
 func Example() {
-	// simple testing function 
+	// simple testing function
 	// takes a rand64.Source64 and gets a bunch of numbers using
 	// math.rand and rand64
 	testfunc := func(name string, s rand64.Source64) {
@@ -32,7 +32,7 @@ func Example() {
 		}
 		fmt.Println("")
 		// Play craps
-		for i:= 0; i < 10; i++ {
+		for i := 0; i < 10; i++ {
 			fmt.Printf(" %d%d", r64.Uintn(6)+1, r64.Uintn(6)+1)
 		}
 		fmt.Println("")
@@ -45,20 +45,24 @@ func Example() {
 		fmt.Println("")
 	}
 
-	// create a new xorshift64+ source and seed it
+	// create a new xorshift64+ source
+	s := xorshift.New64star()
+	// Seed it before use
 	// Typically a non-fixed seed should be used, such as time.Now().UnixNano().
 	// Using a fixed seed will produce the same output on every run.
-	s := xorshift.New64star(SEED1)
+	s.Seed64(SEED1)
 
 	testfunc("xorshift64*", s)
 
 	// test the other two PRNGs
-	s = xorshift.New128plus(SEED1)
+	s = xorshift.New128plus()
+	s.Seed64(SEED1)
 	testfunc("xorshift128+", s)
-	s = xorshift.New1024star(SEED1)
+	s = xorshift.New1024star()
+	s.Seed64(SEED1)
 	testfunc("xorshift1024*", s)
 
-	// Output: 
+	// Output:
 	// xorshift64*
 	//  4252968640 1567930103 1103871594 100834224
 	//  11703131014891570448 16052167272083700520 16375787158461752832 555913475760386374

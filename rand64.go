@@ -6,14 +6,17 @@
 Package rand64 provides support for pseudo-random number generators (PRNG)
 yielding unsinged 64 bits numbers in the range [0, 1<<64).
 
-Implementations for various pseudo random number generators are provided in
-sub-packages.
+Implementations for the following pseudo random number generators are provided
+in sub-packages: scrambled xorshift (xorshift), 64bits Mersene Twister
+(mt19937).
 
 Note that the various Source64 implementations can be integrated
 transparently into existing code (ie. code using rand.Rand) since they also
 provide a rand.Source interface; at the cost of a slight degradation in their
-overall "randomness" quality.
+overall "randomness" quality when used with rand.Rand.
 
+PRNGs are not seeded at creation time. This is to prevent duplication of
+constructors for each seeding method (from single value of from slice).
 */
 package rand64
 
@@ -25,13 +28,13 @@ import (
 //
 // Seed64 uses the provided uint64 seed value to initialize the generator to a deterministic state.
 //
-// SeedArray seeds the generator's state buffer with values from the array argument.
+// SeedFromSlice seeds the generator's state buffer with values from the given source slice.
 //
 // Uint64 returns a pseudo-random 64-bit integer in the range [0, 1<<64).
 type Source64 interface {
 	rand.Source
 	Seed64(uint64)
-	SeedBySlice([]uint64)
+	SeedFromSlice([]uint64)
 	Uint64() uint64
 }
 
