@@ -3,9 +3,9 @@
 // license that can be found in the LICENSE file.
 
 /*
-The xorshift package provides implementations for pseudo random number
-generators using scrambled xorshift algorithms, with two of them passing the
-BigCrunch battery test of the TestU01 test suite without systematic errors.
+The xorshift package provides implementations for pseudo-random number
+generators (PRNG) using scrambled xorshift algorithms, with two of them passing
+the BigCrunch battery test of the TestU01 test suite without systematic errors.
 
 Algorithms by George Marsaglia, Sebastiano Vigna. Go implementation based on a
 C reference implementation by S. Vigna.
@@ -49,6 +49,24 @@ package xorshift
 
 import "github.com/wildservices/rand64"
 
+// helper function to seed a state array dst givent a slice of src uint64
+// if the source slice is too short, we complete with values generated
+// by an xorshift64* PRNG
+func seedArray(dst, src []uint64) {
+	i := copy(dst, src)
+	// fill in the missing bits
+	if i < len(dst) {
+		var seed uint64
+		if i > 0 {
+			seed = dst[i-1]
+		}
+		s64 := New64star(seed)
+		for ; i < len(dst); i++ {
+			dst[i] = s64.Uint64()
+		}
+	}
+}
+
 // xorshift64*
 // This is a good generator if you're short on memory, but otherwise we
 // rather suggest to use a xorshift128+ (for maximum speed) or
@@ -75,6 +93,15 @@ func (s *xs64star) Seed64(seed uint64) {
 // Seeds < 0 are accepted.
 func (s *xs64star) Seed(seed int64) {
 	s.Seed64(uint64(seed))
+}
+
+// SeedBySlice seeds the generator's state buffer with values from the array argument.
+func (s *xs64star) SeedBySlice(seed []uint64) {
+	if len(seed) == 0 {
+		s.Seed64(0)
+	} else {
+		s.Seed64(seed[0])
+	}
 }
 
 // Uint64 returns an unsigned pseudo-random 64-bit integer.
@@ -113,18 +140,18 @@ func New128plus(seed uint64) rand64.Source64 {
 // Seed64 uses the provided uint64 seed value to initialize the generator to a deterministic state.
 func (rng *xs128plus) Seed64(seed uint64) {
 	// The state must be seeded so that it is not everywhere zero.
-	if seed == 0 {
-		seed = 89482311
-	}
-	xs64 := New64star(seed) // TODO: a better way to setup s[]?
-	rng.s[0] = uint64(seed)
-	rng.s[1] = xs64.Uint64()
+	rng.SeedBySlice([]uint64{seed}) // TODO: a better way to setup s[]?
 }
 
 // Seed uses the provided int64 seed value to initialize the generator to a deterministic state.
 // Seeds < 0 are accepted.
 func (rng *xs128plus) Seed(seed int64) {
 	rng.Seed64(uint64(seed))
+}
+
+// SeedBySlice seeds the generator's state buffer with values from the array argument.
+func (rng *xs128plus) SeedBySlice(seed []uint64) {
+	seedArray(rng.s[:], seed)
 }
 
 // Uint64 returns an unsigned pseudo-random 64-bit integer.
@@ -177,6 +204,11 @@ func (rng *xs1024star) Seed64(seed uint64) {
 // Seeds < 0 are accepted.
 func (rng *xs1024star) Seed(seed int64) {
 	rng.Seed64(uint64(seed))
+}
+
+// SeedBySlice seeds the generator's state buffer with values from the array argument.
+func (rng *xs1024star) SeedBySlice(seed []uint64) {
+	seedArray(rng.s[:], seed)
 }
 
 // Uint64 returns an unsigned pseudo-random 64-bit integer.

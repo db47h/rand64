@@ -3,8 +3,8 @@
 // license that can be found in the LICENSE file.
 
 /*
-Package rand64 provides support for pseudo random number generators yielding
-unsinged 64 bits numbers in the range [0, 1<<64).
+Package rand64 provides support for pseudo-random number generators (PRNG)
+yielding unsinged 64 bits numbers in the range [0, 1<<64).
 
 Implementations for various pseudo random number generators are provided in
 sub-packages.
@@ -25,10 +25,13 @@ import (
 //
 // Seed64 uses the provided uint64 seed value to initialize the generator to a deterministic state.
 //
+// SeedArray seeds the generator's state buffer with values from the array argument.
+//
 // Uint64 returns a pseudo-random 64-bit integer in the range [0, 1<<64).
 type Source64 interface {
 	rand.Source
 	Seed64(uint64)
+	SeedBySlice([]uint64)
 	Uint64() uint64
 }
 
