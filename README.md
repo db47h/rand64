@@ -10,10 +10,10 @@ in sub-packages:
    without systematic errors.
  - 64bits Mersene Twister (mt19937).
 
-Note that the various Source64 implementations can be integrated
-transparently into existing code (ie. code using rand.Rand) since they also
-provide a rand.Source interface; at the cost of a slight degradation in their
-overall "randomness" quality when used with rand.Rand.
+Note that rand64.Rand64 implements rand.Source, so it can be used to proxy
+rand64.Source64 sources for rand.Rand and integrate them transparently into
+existing code; at the cost of a slight degradation in the statistical quality
+of their output.
 
 PRNGs are not seeded at creation time. This is to prevent duplication of
 constructors for each seeding method (from single value of from slice).

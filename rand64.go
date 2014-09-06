@@ -10,19 +10,15 @@ Implementations for the following pseudo random number generators are provided
 in sub-packages: scrambled xorshift (xorshift), 64bits Mersene Twister
 (mt19937).
 
-Note that the various Source64 implementations can be integrated
-transparently into existing code (ie. code using rand.Rand) since they also
-provide a rand.Source interface; at the cost of a slight degradation in their
-overall "randomness" quality when used with rand.Rand.
+Note that rand64.Rand64 implements rand.Source, so it can be used to proxy
+rand64.Source64 sources for rand.Rand and integrate them transparently into
+existing code; at the cost of a slight degradation in the statistical quality
+of their output.
 
 PRNGs are not seeded at creation time. This is to prevent duplication of
-constructors for each seeding method (from single value of from slice).
+constructors for each seeding method (from single value or from slice).
 */
 package rand64
-
-import (
-	"math/rand"
-)
 
 // A Source64 represents a source of uniformly-distributed pseudo-random uint64 values in the range [0, 1<<64).
 //
@@ -32,7 +28,6 @@ import (
 //
 // Uint64 returns a pseudo-random 64-bit integer in the range [0, 1<<64).
 type Source64 interface {
-	rand.Source
 	Seed64(uint64)
 	SeedFromSlice([]uint64)
 	Uint64() uint64
@@ -48,10 +43,10 @@ type Rand64 struct {
 func New(src Source64) *Rand64 { return &Rand64{src} }
 
 // Seed uses the provided unsinged seed value to initialize the generator to a deterministic state.
-func (r *Rand64) Seed(seed int64) { r.src.Seed(seed) }
+func (r *Rand64) Seed(seed int64) { r.src.Seed64(uint64(seed)) }
 
 // Int63 returns a non-negative pseudo-random 63-bit integer as an int64.
-func (r *Rand64) Int63() int64 { return r.src.Int63() }
+func (r *Rand64) Int63() int64 { return int64(r.src.Uint64() >> 1) }
 
 // Seed64 uses the provided uint64 seed value to initialize the generator to a deterministic state.
 func (r *Rand64) Seed64(seed uint64) { r.src.Seed64(seed) }

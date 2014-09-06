@@ -73,8 +73,9 @@ func Example() {
 		}
 		fmt.Println("")
 
-		// Source64 can also be used transparently as a initial source for rand.New()
-		r := rand.New(s)
+		// since rand64.Rand64 implements rand.Source, it can
+		// be used to proxy a Source64 to rand.Rand
+		r := rand.New(r64)
 		for i := 0; i < 4; i++ {
 			fmt.Printf(" %d", r.Int63())
 		}
@@ -82,7 +83,7 @@ func Example() {
 	}
 
 	// create a new xorshift64+ source
-	s := xorshift.New64star()
+	var s rand64.Source64 = xorshift.New64star()
 	// Seed it before use
 	// Typically a non-fixed seed should be used, such as time.Now().UnixNano().
 	// Using a fixed seed will produce the same output on every run.

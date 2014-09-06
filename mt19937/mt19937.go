@@ -4,7 +4,7 @@
 
 /*
 The mt19937 package implements a 64-bit version of the Mersenne Twister
-pseudo-random number generator.
+pseudo-random number generator (MT19937 PRNG).
 
 This is a pure Go implementation based on the mt19937-64.c C implementation
 by Makoto Matsumoto and Takuji Nishimura.
@@ -130,13 +130,12 @@ func (rng *mt19937) Uint64() uint64 {
 	}
 
 	x = mt[mti]
+	rng.index = mti + 1
 
 	x ^= (x >> 29) & 0x5555555555555555
 	x ^= (x << 17) & 0x71D67FFFEDA60000
 	x ^= (x << 37) & 0xFFF7EEE000000000
 	x ^= (x >> 43)
-
-	rng.index = mti + 1
 
 	return x
 }
