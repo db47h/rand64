@@ -52,8 +52,8 @@ func (r *Rand64) Int63() int64 { return int64(r.src.Uint64() >> 1) }
 func (r *Rand64) Seed64(seed uint64) { r.src.Seed64(seed) }
 
 // SeedFromSlice seeds the generator's state buffer with values from the array argument.
-func (rng *Rand64) SeedFromSlice(seed []uint64) {
-	rng.src.SeedFromSlice(seed)
+func (r *Rand64) SeedFromSlice(seed []uint64) {
+	r.src.SeedFromSlice(seed)
 }
 
 // Uint64 returns a pseudo-random 64-bit integer in the range [0, 1<<64).
