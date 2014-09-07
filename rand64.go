@@ -51,6 +51,11 @@ func (r *Rand64) Int63() int64 { return int64(r.src.Uint64() >> 1) }
 // Seed64 uses the provided uint64 seed value to initialize the generator to a deterministic state.
 func (r *Rand64) Seed64(seed uint64) { r.src.Seed64(seed) }
 
+// SeedFromSlice seeds the generator's state buffer with values from the array argument.
+func (rng *Rand64) SeedFromSlice(seed []uint64) {
+	rng.src.SeedFromSlice(seed)
+}
+
 // Uint64 returns a pseudo-random 64-bit integer in the range [0, 1<<64).
 func (r *Rand64) Uint64() uint64 { return r.src.Uint64() }
 
@@ -102,6 +107,11 @@ func (r *Rand64) Float64() float64 {
 	return float64(r.Uint64n(1<<53)) / (1 << 53)
 }
 
+// Float64Full returns, as a float64, a pseudo-random number in [0.0,1.0]
+func (r *Rand64) Float64Full() float64 {
+	return float64(r.Uint64n(1<<53)) / (1<<53 - 1)
+}
+
 // Float32 returns, as a float32, a pseudo-random number in [0.0,1.0).
 func (r *Rand64) Float32() float32 {
 	// Same rationale as in Float64
@@ -117,4 +127,15 @@ func (r *Rand64) UPerm(n uint) []uint {
 		m[j] = i
 	}
 	return m
+}
+
+// BulkUint64 returns a slice of n uint64 filled with pseudo-random numbers.
+// The resulting slice can be used for example as a seed for "lesser" PRNGs via Source64.SeedFromSlice()
+func (r *Rand64) BulkUint64(n uint64) []uint64 {
+	rng := r.src
+	a := make([]uint64, n)
+	for i := range a {
+		a[i] = rng.Uint64()
+	}
+	return a
 }
