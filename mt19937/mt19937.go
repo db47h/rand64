@@ -6,6 +6,8 @@
 The mt19937 package implements a 64-bit version of the Mersenne Twister
 pseudo-random number generator (MT19937 PRNG).
 
+The state size is 312 uint64.
+
 This is a pure Go implementation based on the mt19937-64.c C implementation
 by Makoto Matsumoto and Takuji Nishimura.
 
@@ -59,12 +61,6 @@ func (rng *mt19937) Seed64(seed uint64) {
 		mt[i] = 6364136223846793005*(mt[i-1]^(mt[i-1]>>62)) + i
 	}
 	rng.index = i
-}
-
-// Seed uses the provided int64 seed value to initialize the generator to a deterministic state.
-// Seeds < 0 are accepted.
-func (rng *mt19937) Seed(seed int64) {
-	rng.Seed64(uint64(seed))
 }
 
 // SeedBySlice initializes the state array with data from slice key
@@ -138,9 +134,4 @@ func (rng *mt19937) Uint64() uint64 {
 	x ^= (x >> 43)
 
 	return x
-}
-
-// Int63 returns a non-negative pseudo-random 63-bit integer as an int64.
-func (rng *mt19937) Int63() int64 {
-	return int64(rng.Uint64() >> 1)
 }
