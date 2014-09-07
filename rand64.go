@@ -131,7 +131,7 @@ func (r *Rand64) UPerm(n uint) []uint {
 
 // BulkUint64 returns a slice of n uint64 filled with pseudo-random numbers.
 // The resulting slice can be used for example as a seed for "lesser" PRNGs via Source64.SeedFromSlice()
-func (r *Rand64) BulkUint64(n uint64) []uint64 {
+func (r *Rand64) BulkUint64(n uint) []uint64 {
 	rng := r.src
 	a := make([]uint64, n)
 	for i := range a {
