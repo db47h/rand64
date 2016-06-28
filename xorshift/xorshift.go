@@ -39,15 +39,15 @@ noticably faster with better output quality and a much longer period.
 
 PRNGs are created by calling New<algorithm name>() and must be seeded before use.
 
-Benchmarks
+Benchmarks:
 
 The last result is for the default PRNG provided by rand.NewSource() for comparison:
 
-	BenchmarkXorShift64star     100000000       11.7 ns/op
-	BenchmarkXorShift128plus    500000000        7.3 ns/op
-	BenchmarkXorShift1024star   100000000       12.5 ns/op
+	BenchmarkXorShift64star-6  	200000000	         8.92 ns/op
+	BenchmarkXorShift128plus-6 	300000000	         5.28 ns/op
+	BenchmarkXorShift1024star-6	200000000	         9.38 ns/op
 
-	BenchmarkRandSource         100000000       11.4 ns/op
+	BenchmarkRandSource-6      	200000000	         7.89 ns/op
 
 TODO
 
@@ -56,7 +56,7 @@ xorshift4096* implementation.
 package xorshift
 
 import (
-	"github.com/wildservices/rand64"
+	"github.com/db47h/rand64"
 )
 
 // helper function to seed a state array dst given a slice of src uint64

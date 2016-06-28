@@ -6,9 +6,10 @@ package rand64_test
 
 import (
 	"fmt"
-	"github.com/wildservices/rand64"
-	"github.com/wildservices/rand64/xorshift"
 	"math/rand"
+
+	"github.com/db47h/rand64"
+	"github.com/db47h/rand64/xorshift"
 )
 
 const (

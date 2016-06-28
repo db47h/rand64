@@ -9,8 +9,8 @@ import (
 	"math/rand"
 	"testing"
 
-	"github.com/wildservices/rand64"
-	"github.com/wildservices/rand64/xorshift"
+	"github.com/db47h/rand64"
+	"github.com/db47h/rand64/xorshift"
 )
 
 const (

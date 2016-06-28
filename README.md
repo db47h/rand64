@@ -127,15 +127,16 @@ crypto/rand in a Source64 and use its output to seed the faster PRNGs.
 
 # Benchmarks
 
-The last result is for the default PRNG provided by rand.NewSource() for
-comparison:
+The last result is for the default PRNG provided by the standrd library's
+rand.NewSource() for comparison:
 
-    BenchmarkXorShift128plus    500000000        7.3 ns/op
-    BenchmarkXorShift64star     100000000       11.7 ns/op
-    BenchmarkXorShift1024star   100000000       12.5 ns/op
-    BenchmarkMt19937            100000000       15.7 ns/op
+    BenchmarkXorShift64star-6    200000000     8.92 ns/op
+    BenchmarkXorShift128plus-6   300000000     5.28 ns/op
+    BenchmarkXorShift1024star-6  200000000     9.38 ns/op
     
-    BenchmarkRandSource         100000000       11.4 ns/op
+    BenchmarkMt19937-6           100000000    10.50 ns/op
+    
+    BenchmarkRandSource-6        200000000     7.89 ns/op
 
 # TODO
 
@@ -146,4 +147,4 @@ need it.
 
 # Documentation
 
-You can browse the package documentation online at http://godoc.org/github.com/wildservices/rand64
+You can browse the package documentation online at http://godoc.org/github.com/db47h/rand64

@@ -11,8 +11,9 @@ import (
 	"bufio"
 	"crypto/rand"
 	"encoding/binary"
-	"github.com/wildservices/rand64"
-	"github.com/wildservices/rand64/iorand"
+
+	"github.com/db47h/rand64"
+	"github.com/db47h/rand64/iorand"
 )
 
 // GenerateSeed creates a slice of n uint64 filled with random numbers generated

@@ -3,7 +3,7 @@
 // license that can be found in the LICENSE file.
 
 /*
-The iorand package implements a ran64.Source64 wrapper around an io.Reader.
+Package iorand provides a ran64.Source64 wrapper around an io.Reader.
 
 This implementation does not require seeding and can be used for example to
 read random numbers from crypto.rand.Reader.
@@ -36,12 +36,12 @@ func New(r io.Reader, bo binary.ByteOrder) *IoRand {
 	return &IoRand{r: r, byteOrder: bo, Err: nil}
 }
 
-// no-op dummy function as IoRand does not support Seeding
+// Seed64 is a no-op dummy function as IoRand does not support Seeding
 func (r *IoRand) Seed64(seed uint64) {
 	// nothing to do
 }
 
-// no-op dummy function as IoRand does not support Seeding
+// SeedFromSlice is a no-op dummy function as IoRand does not support Seeding
 func (r *IoRand) SeedFromSlice(key []uint64) {
 	// nothing to do
 }

@@ -19,7 +19,7 @@ See included LICENSE_MT for original C code and license.
 */
 package mt19937
 
-import "github.com/wildservices/rand64"
+import "github.com/db47h/rand64"
 
 const (
 	_NN       = 312

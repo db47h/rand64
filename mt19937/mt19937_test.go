@@ -6,9 +6,10 @@ package mt19937_test
 
 import (
 	"fmt"
-	"github.com/wildservices/rand64/mt19937"
 	"math/rand"
 	"testing"
+
+	"github.com/db47h/rand64/mt19937"
 )
 
 const (
