@@ -11,12 +11,11 @@ import (
 
 	"github.com/db47h/rand64"
 	"github.com/db47h/rand64/iorand"
-	"github.com/db47h/rand64/randutil"
 )
 
 // Wrap crypto/rand in an IoRand
 func ExampleNew() {
-	// first, wrap rand.Reader in a buffered bufio.Reader
+	// first, wrap crypto/rand.Reader in a buffered bufio.Reader
 	bufferedReader := bufio.NewReader(rand.Reader)
 	// Create the new IoRand
 	ior := iorand.New(bufferedReader, binary.LittleEndian)
@@ -27,12 +26,6 @@ func ExampleNew() {
 		_ = rng.Uint64()
 	}
 
-	// A one liner to quickly get a "good" seed for other PRNGs
-	// Here we build a slice of 512 uint64 to be used with Source64.SeedFromSlice
-	seedSlice := rand64.New(iorand.New(rand.Reader, binary.LittleEndian)).BulkUint64(512)
-	// the function randutil.GenerateSeed() does the same:
-	seedSlice = randutil.GenerateSeed(512)
-
-	// the following is just to make the example compile.
-	_ = seedSlice
+	// the randutil package provides a utility function just to do that in a one
+	// liner and quickly get a "good" seed for other PRNGs
 }

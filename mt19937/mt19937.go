@@ -40,15 +40,15 @@ type mt19937 struct {
 	index uint64
 }
 
-// New returns a new pseudo-random Source64 using the MT19937 algorithm.
-func New() rand64.Source64 {
+// New returns a new pseudo-random Source using the MT19937 algorithm.
+func New() rand64.Source {
 	return &mt19937{index: _NSeed}
 }
 
 // Seed64 uses the provided uint64 seed value to initialize the generator to a deterministic state
 //
 // If Seed is 0, a default seed will be used (5489).
-func (rng *mt19937) Seed64(seed uint64) {
+func (rng *mt19937) Seed(seed uint64) {
 	var i uint64
 	mt := rng.state[:]
 
@@ -72,7 +72,7 @@ func (rng *mt19937) SeedFromSlice(key []uint64) {
 	)
 	mt := rng.state[:]
 
-	rng.Seed64(19650218)
+	rng.Seed(19650218)
 
 	if _NN > k {
 		k = _NN
@@ -110,7 +110,7 @@ func (rng *mt19937) Uint64() uint64 {
 	if mti >= _NN { // generate _NN words at once
 		// seed if needed
 		if mti == _NSeed {
-			rng.Seed64(5489)
+			rng.Seed(5489)
 		}
 
 		for i = 0; i < _NN-_MM; i++ {

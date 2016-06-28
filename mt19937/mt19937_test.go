@@ -6,8 +6,6 @@ package mt19937_test
 
 import (
 	"fmt"
-	"math/rand"
-	"testing"
 
 	"github.com/db47h/rand64/mt19937"
 )
@@ -48,21 +46,4 @@ func Example() {
 	// 10 more
 	//  14907209235746902445 15452338815569321965 17045090235069538607 15507333859934612093   157175897107904252
 	//   2578005313950236321  6502648805754593060 13133523174961431106  2698278206396822833  3278969850082110371
-}
-
-/* Benchmarks */
-
-func BenchmarkMt19937(b *testing.B) {
-	s := mt19937.New()
-	s.Seed64(SEED1)
-	for i := 0; i < b.N; i++ {
-		_ = s.Uint64()
-	}
-}
-
-func BenchmarkRandSource(b *testing.B) {
-	s := rand.NewSource(SEED1)
-	for i := 0; i < b.N; i++ {
-		_ = s.Int63()
-	}
 }

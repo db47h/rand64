@@ -7,7 +7,6 @@ package xorshift_test
 import (
 	"fmt"
 	"math/rand"
-	"testing"
 
 	"github.com/db47h/rand64"
 	"github.com/db47h/rand64/xorshift"
@@ -17,47 +16,14 @@ const (
 	SEED1 = 1387366483214
 )
 
-/* Benchmarks */
-
-func BenchmarkXorShift64star(b *testing.B) {
-	s := xorshift.New64star()
-	s.Seed64(SEED1)
-	for i := 0; i < b.N; i++ {
-		_ = s.Uint64()
-	}
-}
-
-func BenchmarkXorShift128plus(b *testing.B) {
-	s := xorshift.New128plus()
-	s.Seed64(SEED1)
-	for i := 0; i < b.N; i++ {
-		_ = s.Uint64()
-	}
-}
-
-func BenchmarkXorShift1024star(b *testing.B) {
-	s := xorshift.New1024star()
-	s.Seed64(SEED1)
-	for i := 0; i < b.N; i++ {
-		_ = s.Uint64()
-	}
-}
-
-func BenchmarkRandSource(b *testing.B) {
-	s := rand.NewSource(SEED1)
-	for i := 0; i < b.N; i++ {
-		_ = s.Int63()
-	}
-}
-
 /* Tests */
 func Example() {
 	// simple testing function
-	// takes a rand64.Source64 and gets a bunch of numbers using
+	// takes a rand64.Source and gets a bunch of numbers using
 	// math.rand and rand64
-	testfunc := func(name string, s rand64.Source64) {
+	testfunc := func(name string, s rand64.Source) {
 		fmt.Println(name)
-		// Using Rand64
+		// Using Rand
 		r64 := rand64.New(s)
 		for i := 0; i < 4; i++ {
 			fmt.Printf(" %d", r64.Uint32())
@@ -73,8 +39,8 @@ func Example() {
 		}
 		fmt.Println("")
 
-		// since rand64.Rand64 implements rand.Source, it can
-		// be used to proxy a Source64 to rand.Rand
+		// since rand64.Rand implements rand.Source, it can
+		// be used to proxy a Source to rand.Rand
 		r := rand.New(r64)
 		for i := 0; i < 4; i++ {
 			fmt.Printf(" %d", r.Int63())
@@ -82,37 +48,30 @@ func Example() {
 		fmt.Println("")
 	}
 
-	// create a new xorshift64+ source
-	var s rand64.Source64 = xorshift.New64star()
+	// create a new xorshift128+ source
+	var s = xorshift.New128plus()
 	// Seed it before use
 	// Typically a non-fixed seed should be used, such as time.Now().UnixNano().
 	// Using a fixed seed will produce the same output on every run.
-	s.Seed64(SEED1)
+	s.Seed(SEED1)
 
-	testfunc("xorshift64*", s)
-
-	// test the other two PRNGs
-	s = xorshift.New128plus()
-	s.Seed64(SEED1)
+	// test it
 	testfunc("xorshift128+", s)
+
+	// test xorshift1024*
 	s = xorshift.New1024star()
-	s.Seed64(SEED1)
+	s.Seed(SEED1)
 	testfunc("xorshift1024*", s)
 
 	// Output:
-	// xorshift64*
-	//  4252968640 1567930103 1103871594 100834224
-	//  11703131014891570448 16052167272083700520 16375787158461752832 555913475760386374
-	//  14 55 63 53 55 53 54 55 31 63
-	//  2491964529228605837 2984422860736700565 8255282211660800230 6933471558157501315
 	// xorshift128+
-	//  1518137344 519821205 3300663698 3965912936
-	//  6835817718900859006 18347342841597239847 11478842834840845837 6143230513443926046
-	//  35 63 66 54 12 23 21 62 62 16
-	//  7186098100741600992 419266794253563720 4425471115904323875 4503902914122463897
+	//  3672052799 2300942069 2356831912 2316732845
+	//  5560898047753517047 9806550241747869425 16344204150069124721 7133254478284829050
+	//  64 11 26 14 23 64 23 23 13 52
+	//  802413841702959598 2251227033134975276 4988225046549461352 2188638676389822986
 	// xorshift1024*
-	//  195155788 2037024496 1994874030 3867722788
-	//  7544033655184947852 3904249604014777577 4836159697542621750 17890123175292291115
-	//  11 61 54 55 31 16 11 32 35 31
-	//  2545656951200074019 4059416866932157570 8849131518188499907 379980398101807463
+	//  3332849200 1164738618 456220800 3523432244
+	//  10311270752396438174 3766918502733849924 15396074446274990069 15679784721060022461
+	//  36 33 14 53 43 46 16 66 61 33
+	//  8307002403806671045 2041967637359636555 2088934487125395476 7936776852298221278
 }

@@ -19,10 +19,13 @@ import (
 // GenerateSeed creates a slice of n uint64 filled with random numbers generated
 // by Go's default cryptograhically secure PRNG.
 //
-// The returned slice can be used as an argument to Source64.SeedFromSlice()
+// The returned slice can be used as an argument to Source.SeedFromSlice()
 func GenerateSeed(n uint) []uint64 {
 	r := bufio.NewReaderSize(rand.Reader, int(n&(1<<31-1)))
-	s := iorand.New(r, binary.LittleEndian)
-	return rand64.New(s).BulkUint64(n)
-	// TODO: IoRand.Uint64 should be checkd for errors here
+	rng := rand64.New(iorand.New(r, binary.LittleEndian))
+	b := make([]uint64, n)
+	for i := range b {
+		b[i] = rng.Uint64()
+	}
+	return b
 }
