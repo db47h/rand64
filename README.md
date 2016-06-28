@@ -1,4 +1,7 @@
-# OVERVIEW
+# rand64
+
+[![Build Status](https://travis-ci.org/db47h/rand64.svg?branch=master)](https://travis-ci.org/db47h/rand64)
+[![Go Report Card](https://goreportcard.com/badge/github.com/db47h/rand64)](https://goreportcard.com/report/github.com/db47h/rand64)  [![GoDoc](https://godoc.org/github.com/db47h/rand64?status.svg)](https://godoc.org/github.com/db47h/rand64)
 
 Package rand64 provides support for pseudo random number generators
 yielding unsinged 64 bits numbers in the range \[0, 2<sup>64</sup>).
