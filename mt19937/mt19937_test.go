@@ -16,7 +16,7 @@ const (
 	SEED1 = 1387366483214
 )
 
-func ExampleMt19937_Uint64() {
+func Example() {
 	init := []uint64{
 		0x12345, 0x23456, 0x34567, 0x45678,
 	}

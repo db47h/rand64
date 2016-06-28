@@ -3,7 +3,7 @@
 // license that can be found in the LICENSE file.
 
 /*
-The xorshift package provides implementations for pseudo-random number
+Package xorshift provides implementations for pseudo-random number
 generators (PRNG) using scrambled xorshift algorithms, with two of them passing
 the BigCrunch battery test of the TestU01 test suite without systematic errors.
 
@@ -35,7 +35,7 @@ Period: 2^64-1. State size: 1 uint64.
 This is a decent generator (failing BigCrunch only on the MatrixRank test). It
 is used internally to seed the state buffers for the other algorithms. Using
 it as a general purpose PRNG is however not recommended since xorshift128+ is
-noticably faster with better output quality and a much longer period.
+noticeably faster with better output quality and a much longer period.
 
 PRNGs are created by calling New<algorithm name>() and must be seeded before use.
 

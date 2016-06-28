@@ -3,7 +3,7 @@
 // license that can be found in the LICENSE file.
 
 /*
-The mt19937 package implements a 64-bit version of the Mersenne Twister
+Package mt19937 implements a 64-bit version of the Mersenne Twister
 pseudo-random number generator (MT19937 PRNG).
 
 The state size is 312 uint64.
@@ -22,17 +22,17 @@ package mt19937
 import "github.com/db47h/rand64"
 
 const (
-	_NN       = 312
-	_MM       = 156
-	_MATRIX_A = 0xB5026F5AA96619E9
-	_UM       = 0xFFFFFFFF80000000 // Most significant 33 bits
-	_LM       = 0x7FFFFFFF         // Least significant 31 bits
-	_NSEED    = _NN + 1            // index==NN+1 means mt[NN] is not initialized
+	_NN      = 312
+	_MM      = 156
+	_MatrixA = 0xB5026F5AA96619E9
+	_UM      = 0xFFFFFFFF80000000 // Most significant 33 bits
+	_LM      = 0x7FFFFFFF         // Least significant 31 bits
+	_NSeed   = _NN + 1            // index==NN+1 means mt[NN] is not initialized
 )
 
-var mag01 [2]uint64 = [...]uint64{
+var mag01 = [...]uint64{
 	0,
-	_MATRIX_A,
+	_MatrixA,
 }
 
 type mt19937 struct {
@@ -42,7 +42,7 @@ type mt19937 struct {
 
 // New returns a new pseudo-random Source64 using the MT19937 algorithm.
 func New() rand64.Source64 {
-	return &mt19937{index: _NSEED}
+	return &mt19937{index: _NSeed}
 }
 
 // Seed64 uses the provided uint64 seed value to initialize the generator to a deterministic state
@@ -65,9 +65,11 @@ func (rng *mt19937) Seed64(seed uint64) {
 
 // SeedBySlice initializes the state array with data from slice key
 func (rng *mt19937) SeedFromSlice(key []uint64) {
-	var i uint64 = 1
-	var j uint64
-	var k uint64 = uint64(len(key))
+	var (
+		i uint64 = 1
+		j uint64
+		k = uint64(len(key))
+	)
 	mt := rng.state[:]
 
 	rng.Seed64(19650218)
@@ -107,7 +109,7 @@ func (rng *mt19937) Uint64() uint64 {
 
 	if mti >= _NN { // generate _NN words at once
 		// seed if needed
-		if mti == _NSEED {
+		if mti == _NSeed {
 			rng.Seed64(5489)
 		}
 

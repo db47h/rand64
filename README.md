@@ -92,7 +92,7 @@ period 2<sup>64</sup>-1
 This is a decent generator (failing BigCrunch only on the MatrixRank
 test). It is used internally to seed the state buffers for the other
 algorithms from a single value. Using it as a general purpose PRNG is however
-not recommended since xorshift128+ is noticably faster with better statistical
+not recommended since xorshift128+ is noticeably faster with better statistical
 quality and a much longer period.
 
 ## MT19937-64
