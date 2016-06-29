@@ -62,6 +62,28 @@ vary between runs (especially the chi square distribution).
 
 [ent]: http://www.fourmilab.ch/random/
 
+Here's the program used to generate the test outputs:
+
+```
+package main
+
+import (
+    "io"
+    "os"
+    "time"
+
+    "github.com/db47h/rand64"
+    "github.com/db47h/rand64/xoroshiro"
+)
+
+func main() {
+    rng := rand64.New(xoroshiro.New128plus())
+    rng.Seed(time.Now().UnixNano())
+
+    io.CopyN(os.Stdout, rng, 1024*1024)
+}
+```
+
 ## xoroshiro128+
 period 2<sup>128</sup>-1
 
@@ -75,9 +97,19 @@ Beside passing BigCrush, this generator passes the PractRand test suite up to
 the lowest bit being an LFSR; all other bits pass all tests. We suggest to use
 a sign test to extract a random Boolean value.
 
-The state must be seeded so that it is not everywhere zero. If you have a
-64-bit seed, we suggest to seed a splitmix64 generator and use its output to
-fill s.
+Test with ent over a 1MB sample:
+
+    Entropy = 1.000000 bits per bit.
+
+    Optimum compression would reduce the size
+    of this 8388608 bit file by 0 percent.
+
+    Chi square distribution for 8388608 samples is 0.00, and randomly
+    would exceed this value 99.34 percent of the times.
+
+    Arithmetic mean value of data bits is 0.5000 (0.5 = random).
+    Monte Carlo value for Pi is 3.141621176 (error 0.00 percent).
+    Serial correlation coefficient is 0.000378 (totally uncorrelated = 0.0).
 
 ## xorshift128+
 period 2<sup>128</sup>-1
@@ -89,44 +121,40 @@ Passes BigCrush without systematic errors, but due to the relatively short
 period it is acceptable only for applications with a very mild amount of
 parallelism; otherwise, use a xorshift1024\* generator.
 
-Test with ent over 10,000 64 bits samples:
+Test with ent:
 
-	Entropy = 7.997753 bits per byte.
+    Entropy = 1.000000 bits per bit.
 
-	Optimum compression would reduce the size
-	of this 80000 byte file by 0 percent.
+    Optimum compression would reduce the size
+    of this 8388608 bit file by 0 percent.
 
-	Chi square distribution for 80000 samples is 250.99, and randomly
-	would exceed this value 50.00 percent of the times.
+    Chi square distribution for 8388608 samples is 0.11, and randomly
+    would exceed this value 73.61 percent of the times.
 
-	Arithmetic mean value of data bytes is 127.6051 (127.5 = random).
-	Monte Carlo value for Pi is 3.127878197 (error 0.44 percent).
-	Serial correlation coefficient is -0.002355 (totally uncorrelated = 0.0).
-
-Tests runs of this algorithm to compute π with the Monte Carlo method yielded
-π = 3.1415924162 after 40,002,000,000 iterations, with a stable approximation
-at the 6<sup>th</sup> decimal.
+    Arithmetic mean value of data bits is 0.5001 (0.5 = random).
+    Monte Carlo value for Pi is 3.140568316 (error 0.03 percent).
+    Serial correlation coefficient is 0.000040 (totally uncorrelated = 0.0).
 
 ## xorshift1024\*
 period 2<sup>1024</sup>-1
 
-This is a fast, top-quality generator, also passing BigCrunch without
-systematic errors. If 1024 bits of state are too much, try a
-xorshift128+ or xorshift64\* generator.
+This is a fast, top-quality generator, also passing BigCrunch without systematic
+errors. If 1024 bits of state are too much, try an xorshift128+ or xorshift64\*
+generator.
 
 Test with ent:
 
-	Entropy = 7.997792 bits per byte.
+    Entropy = 1.000000 bits per bit.
 
-	Optimum compression would reduce the size
-	of this 80000 byte file by 0 percent.
+    Optimum compression would reduce the size
+    of this 8388608 bit file by 0 percent.
 
-	Chi square distribution for 80000 samples is 246.32, and randomly
-	would exceed this value 50.00 percent of the times.
+    Chi square distribution for 8388608 samples is 0.02, and randomly
+    would exceed this value 88.52 percent of the times.
 
-	Arithmetic mean value of data bytes is 127.8454 (127.5 = random).
-	Monte Carlo value for Pi is 3.132678317 (error 0.28 percent).
-	Serial correlation coefficient is -0.001606 (totally uncorrelated = 0.0).
+    Arithmetic mean value of data bits is 0.5000 (0.5 = random).
+    Monte Carlo value for Pi is 3.140842975 (error 0.02 percent).
+    Serial correlation coefficient is 0.000387 (totally uncorrelated = 0.0).
 
 ## MT19937-64
 period 2<sup>19937</sup>-1
@@ -139,17 +167,17 @@ are available from http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/emt.html
 
 Test with ent:
 
-	Entropy = 7.997964 bits per byte.
+    Entropy = 1.000000 bits per bit.
 
-	Optimum compression would reduce the size
-	of this 80000 byte file by 0 percent.
+    Optimum compression would reduce the size
+    of this 8388608 bit file by 0 percent.
 
-	Chi square distribution for 80000 samples is 225.61, and randomly
-	would exceed this value 90.00 percent of the times.
+    Chi square distribution for 8388608 samples is 1.03, and randomly
+    would exceed this value 30.97 percent of the times.
 
-	Arithmetic mean value of data bytes is 127.6890 (127.5 = random).
-	Monte Carlo value for Pi is 3.144978624 (error 0.11 percent).
-	Serial correlation coefficient is 0.000496 (totally uncorrelated = 0.0).
+    Arithmetic mean value of data bits is 0.5002 (0.5 = random).
+    Monte Carlo value for Pi is 3.132008102 (error 0.31 percent).
+    Serial correlation coefficient is 0.000228 (totally uncorrelated = 0.0).
 
 ## io.Reader wrapper
 Not an actual PRNG.
@@ -164,7 +192,7 @@ These benchmarks where done with go-tip (1.7 beta 2 as of writing) where
 xorshift1024*, splitmix64, MT19937 and the standard Go PRNG got a significant
 performance boost over Go 1.6.2.
 
-The last result is for the default PRNG provided by the standrd library's
+The last result is for the default PRNG provided by the standard library's
 rand.NewSource() for comparison:
 
     Splitmix64           	300000000	         4.35 ns/op
@@ -174,7 +202,10 @@ rand.NewSource() for comparison:
     Mt19937              	200000000	         9.12 ns/op
     GoRand              	200000000	         6.40 ns/op
 
-[1]: According to the authors of the algorithms, the xoroshiro128+ algorithm should be significantly faster than xorshift128+. As seen in the benchmarks, it is in fact just a little slower eventhough Go 1.6.2 and 1.7 properly *do* translate the simulated rotate into a single rotate instruction on x86_64.
+[1]: According to the authors of the algorithms, the xoroshiro128+ algorithm
+should be significantly faster than xorshift128+. As seen in the benchmarks, it
+is in fact just a little slower even though Go 1.6.2 and 1.7 properly *do*
+translate the simulated rotate into a single rotate instruction on x86_64.
 
 # Documentation
 
