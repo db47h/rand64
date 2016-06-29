@@ -30,9 +30,12 @@ package xoroshiro
 import (
 	"github.com/db47h/rand64"
 	"github.com/db47h/rand64/internal/util"
+	"github.com/db47h/rand64/splitmix64"
 )
 
-type xrsr128plus [2]uint64
+type xrsr128plus struct {
+	s0, s1 uint64
+}
 
 // New128plus returns a new pseudo-random number Source using the xoroshiro128+ algorithm.
 func New128plus() rand64.Source {
@@ -40,23 +43,27 @@ func New128plus() rand64.Source {
 }
 
 func (rng *xrsr128plus) Seed(seed uint64) {
-	util.SeedSlice((*rng)[:], seed)
+	src := splitmix64.New(seed)
+	rng.s0 = src.Uint64()
+	rng.s1 = src.Uint64()
 }
 
 func (rng *xrsr128plus) SeedFromSlice(seed []uint64) {
-	util.SeedFromSlice(rng[:], seed)
+	var state [2]uint64
+	util.SeedFromSlice(state[:], seed)
+	rng.s0 = state[0]
+	rng.s1 = state[1]
 }
 
 func (rng *xrsr128plus) Uint64() uint64 {
-	s0 := (*rng)[0]
-	s1 := (*rng)[1]
+	s0 := rng.s0
+	s1 := rng.s1
 	result := s0 + s1
-
-	s1 ^= s0
+	s1 ^= rng.s0
 	// go 1.6.2 and 1.7 properly assemble the pattern (x << n) | (x >> (64 - n))
 	// to a ROLQ n, x on x86_64. Earlier versions not tested.
-	(*rng)[0] = ((s0 << 55) | (s0 >> (64 - 55))) ^ s1 ^ (s1 << 14)
-	(*rng)[1] = ((s1 << 36) | (s1 >> (64 - 36)))
+	rng.s0 = ((s0 << 55) | (s0 >> (64 - 55))) ^ s1 ^ (s1 << 14)
+	rng.s1 = ((s1 << 36) | (s1 >> (64 - 36)))
 
 	return result
 }
