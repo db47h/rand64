@@ -16,8 +16,8 @@ existing code; at the cost of a slight degradation in the statistical quality
 of their output.
 
 Apart from splitmix64 which has a 64 bit state, PRNGs are not seeded at creation
- time. This is to prevent duplication of constructors for each seeding method
- (from single value or from slice).
+time. This is to prevent duplication of constructors for each seeding method
+(from single value or from slice).
 */
 package rand64
 
