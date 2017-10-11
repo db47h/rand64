@@ -27,12 +27,20 @@ var values = [...]uint64{
 	0xC7A8EB53EB467566,
 }
 
-func TestNew(t *testing.T) {
-	rng := splitmix64.New(SEED1)
+func TestRng(t *testing.T) {
+	var rng splitmix64.Rng
+	rng.Seed(SEED1)
 	for _, v := range values {
 		n := rng.Uint64()
 		if n != v {
 			t.Fatalf("Expected %X, got %X", v, n)
+		}
+	}
+	rng.Seed(SEED1)
+	for _, v := range values {
+		n := rng.Int63()
+		if n != int64(v>>1) {
+			t.Fatalf("Expected %X, got %X", int64(v>>1), n)
 		}
 	}
 }

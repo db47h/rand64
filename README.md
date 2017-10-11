@@ -1,162 +1,90 @@
 # rand64
 
-[![Build Status](https://travis-ci.org/db47h/rand64.svg?branch=master)](https://travis-ci.org/db47h/rand64)
-[![Go Report Card](https://goreportcard.com/badge/github.com/db47h/rand64)](https://goreportcard.com/report/github.com/db47h/rand64)  [![GoDoc](https://godoc.org/github.com/db47h/rand64?status.svg)](https://godoc.org/github.com/db47h/rand64)
+[![Build Status][travisImg]][travis]
+[![Go Report Card][goreportImg]][goreport]
+[![GoDoc][godocImg]][godoc]
 
-Package rand64 provides support for pseudo random number generators
-yielding unsinged 64 bits numbers in the range \[0, 2<sup>64</sup>).
-
-Go's built in PRNG returns 63 bits positive integers in \[0, 2<sup>63</sup>)
-and the algorithm used is an additive lagged Fibonacci generator:
-LFib(2<sup>63</sup>, 607, 273, +).
-
-Although the built in rand.Rand is meant to be extensible, the limitation to 63
-bits makes it unsuitable in some cases.
+Package rand64 provides pseudo random number generators yielding unsinged 64
+bits numbers in the range \[0, 2<sup>64</sup>).
 
 Implementations for the following pseudo random number generators are provided
-in sub-packages:
+in their own packages:
 
- - splitmix64, a 64 bits SplittableRandom PRNG. Mostly used as a seeder for the
-   other PRNGs.
- - scrambled xorshift (xorshift), with two variants passing the BigCrunch test
-   without systematic errors.
- - xoroshiro128, the successor to xorshift128+. It is the fastest full-period
-   generator passing BigCrush without systematic failures.
- - 64bits Mersene Twister (mt19937).
- - io.Reader wrapper for PRNG sources.
+- splitmix64, a 64 bits SplittableRandom PRNG. Mostly used as a seeder for the other PRNGs.
+- xorshift128+
+- xorshift1024*
+- xoroshiro128+
+- io.Reader wrapper for PRNG sources.
 
-Note that rand64.Rand implements rand.Source, so it can be used to proxy
-rand64.Source sources for rand.Rand and integrate them transparently into
-existing code; at the cost of a slight degradation in the statistical quality
-of their output.
+These generetors implement rand.Source64, so they can be used as source for
+rand.Rand (as of Go 1.8).
 
-PRNGs are not seeded at creation time (except for splitmix64). This is to
-prevent needless duplication of initial state data during initialization.
+Note that some algorithms make use of the bits package from Go 1.9.
 
 Creation of a PRNG looks like this:
 
 ```
-source := xoroshiro.New128plus()    // create source
-source.Seed(uint64Seed)             // Seed it from a single Uint64
-source.SeedFromSlice(initialState)  // OR from a slice of Uints
-// wrap it in a rand64.Rand wrapper that will provide more utility functions
-rng := rand64.New(source)
+source := xoroshiro.Rng{}           // create source
+// wrap it in a rand.Rand wrapper that will provide more utility functions
+rng := rand.New(&source)
+rng.Seed(int64Seed)              // Seed it from a single int64 (negative values are accepted)
 ```
 
-Or even shorter:
+## Algorithms
 
-```
-rng := rand64.New(xoroshiro.New128plus()) // one liner to create wrapper and source
-rng.Seed64(uint64Seed)                    // or rng.SeedFromSlice(...)
-```
+### splitmix64
 
-# Algorithms
+This is a fixed-increment version of Java 8's [SplittableRandom](http://docs.oracle.com/javase/8/docs/api/java/util/SplittableRandom.html) generator. See also the page on [Fast splittable pseudorandom number generators](http://dx.doi.org/10.1145/2714064.2660195).
 
-Scrambled xorshift algorithms by George Marsaglia, Sebastiano Vigna. Go
-implementation based on a C reference implementations by David Blackman and
-Sebastiano Vigna. For further information: http://xorshift.di.unimi.it/
+Go implementation based on a C reference implementation by Sebastiano Vigna.
 
-Tests through the [ent program][ent], with a deliberately fairly low sample
-count, are included. Note that these results are informational only and may
-vary between runs (especially the chi square distribution).
+### xorshift128+
 
-[ent]: http://www.fourmilab.ch/random/
+Period 2<sup>128</sup>-1
 
-Here's the program used to generate the test outputs:
+A 64-bit version of Saito and Matsumoto's XSadd generator. Instead of using a
+multiplication, it returns the sum (in Z/264Z) of two consecutive output of a
+xorshift generator. This generator is presently used in the JavaScript engines
+of Chrome, Firefox, Safari, Microsoft Edge. If you find its period too short
+for large-scale parallel simulations, use xorshift1024*.
 
-```
-package main
+Go implementation based on a C reference implementation by Sebastiano Vigna.
 
-import (
-    "io"
-    "os"
-    "time"
+For more information, visit the [xoroshiro+ / xorshift* / xorshift+ generators and the PRNG shootout][PRNGSHoutout] page.
 
-    "github.com/db47h/rand64"
-    "github.com/db47h/rand64/xoroshiro"
-)
+### xorshift1024*
 
-func main() {
-    rng := rand64.New(xoroshiro.New128plus())
-    rng.Seed(time.Now().UnixNano())
+Period 2<sup>1024</sup>-1
 
-    io.CopyN(os.Stdout, rng, 1024*1024)
-}
-```
+A fast, high-quality PRNG. Numbers are obtained by scrambling the output of a
+Marsaglia xorshift generator with a 64-bit invertible multiplier.
 
-## xoroshiro128+
-period 2<sup>128</sup>-1
+Go implementation based on a C reference implementation by Sebastiano Vigna.
 
-This is the successor to xorshift128+. It is the fastest[1] full-period generator
-passing BigCrush without systematic failures, but due to the relatively short
-period it is acceptable only for applications with a mild amount of parallelism;
-otherwise, use a xorshift1024* generator.
+For more information, visit the [xoroshiro+ / xorshift* / xorshift+ generators and the PRNG shootout][PRNGSHoutout] page.
 
-Beside passing BigCrush, this generator passes the PractRand test suite up to
-(and included) 16TB, with the exception of binary rank tests, which fail due to
-the lowest bit being an LFSR; all other bits pass all tests. We suggest to use
-a sign test to extract a random Boolean value.
+### xoroshiro128+
 
-Test with ent over a 1MB sample:
+Period 2<sup>128</sup>-1
 
-    Entropy = 1.000000 bits per bit.
+According to the algorithm authors:
 
-    Optimum compression would reduce the size
-    of this 8388608 bit file by 0 percent.
+> xoroshiro128+ (XOR/rotate/shift/rotate) is the successor to xorshift128+.
+> Instead of perpetuating Marsaglia's tradition of xorshift as a basic
+> operation, xoroshiro128+ uses a carefully handcrafted shift/rotate-based
+> linear transformation designed in collaboration with David Blackman. The
+> result is a significant improvement in speed (well below a nanosecond per
+> integer) and a significant improvement in statistical quality, as detected by
+> the long-range tests of PractRand. xoroshiro128+ is our current suggestion for
+> replacing low-quality generators commonly found in programming languages. It
+> is the default generator in Erlang.
 
-    Chi square distribution for 8388608 samples is 0.00, and randomly
-    would exceed this value 99.34 percent of the times.
+Go implementation based on a C reference implementation by David Blackman and
+Sebastiano Vigna.
 
-    Arithmetic mean value of data bits is 0.5000 (0.5 = random).
-    Monte Carlo value for Pi is 3.141621176 (error 0.00 percent).
-    Serial correlation coefficient is 0.000378 (totally uncorrelated = 0.0).
+For more information, visit the [xoroshiro+ / xorshift* / xorshift+ generators and the PRNG shootout][PRNGSHoutout] page.
 
-## xorshift128+
-period 2<sup>128</sup>-1
-
-This generator has been replaced by xoroshiro128plus, which is significantly[1]
-faster and has better statistical properties.
-
-Passes BigCrush without systematic errors, but due to the relatively short
-period it is acceptable only for applications with a very mild amount of
-parallelism; otherwise, use a xorshift1024\* generator.
-
-Test with ent:
-
-    Entropy = 1.000000 bits per bit.
-
-    Optimum compression would reduce the size
-    of this 8388608 bit file by 0 percent.
-
-    Chi square distribution for 8388608 samples is 0.11, and randomly
-    would exceed this value 73.61 percent of the times.
-
-    Arithmetic mean value of data bits is 0.5001 (0.5 = random).
-    Monte Carlo value for Pi is 3.140568316 (error 0.03 percent).
-    Serial correlation coefficient is 0.000040 (totally uncorrelated = 0.0).
-
-## xorshift1024\*
-period 2<sup>1024</sup>-1
-
-This is a fast, top-quality generator, also passing BigCrunch without systematic
-errors. If 1024 bits of state are too much, try an xorshift128+ or xorshift64\*
-generator.
-
-Test with ent:
-
-    Entropy = 1.000000 bits per bit.
-
-    Optimum compression would reduce the size
-    of this 8388608 bit file by 0 percent.
-
-    Chi square distribution for 8388608 samples is 0.02, and randomly
-    would exceed this value 88.52 percent of the times.
-
-    Arithmetic mean value of data bits is 0.5000 (0.5 = random).
-    Monte Carlo value for Pi is 3.140842975 (error 0.02 percent).
-    Serial correlation coefficient is 0.000387 (totally uncorrelated = 0.0).
-
-## MT19937-64
+### MT19937-64
 period 2<sup>19937</sup>-1
 
 This is a pure Go implementation based on the mt19937-64.c C implementation
@@ -165,48 +93,74 @@ by Makoto Matsumoto and Takuji Nishimura.
 More information on the Mersenne Twister algorithm and other implementations
 are available from http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/emt.html
 
-Test with ent:
+### io.Reader wrapper
 
-    Entropy = 1.000000 bits per bit.
-
-    Optimum compression would reduce the size
-    of this 8388608 bit file by 0 percent.
-
-    Chi square distribution for 8388608 samples is 1.03, and randomly
-    would exceed this value 30.97 percent of the times.
-
-    Arithmetic mean value of data bits is 0.5002 (0.5 = random).
-    Monte Carlo value for Pi is 3.132008102 (error 0.31 percent).
-    Serial correlation coefficient is 0.000228 (totally uncorrelated = 0.0).
-
-## io.Reader wrapper
 Not an actual PRNG.
 
-The IoRand package contains a wrapper for reading data streams via io.Reader.
-There is a helper function in the randutil package that uses it to wrap
-crypto/rand in a Source and use its output to seed the faster PRNGs.
+The IoRand package is a simple wrapper for reading byte streams via io.Reader.
+It can be used as a wrapper around crypto/rand to build a rand.Source64 for
+the math/rand package:
 
-# Benchmarks
+```go
+package main
 
-These benchmarks where done with go-tip (1.7 beta 2 as of writing) where
-xorshift1024*, splitmix64, MT19937 and the standard Go PRNG got a significant
-performance boost over Go 1.6.2.
+import (
+    "bufio"
+    crand "crypto/rand"
+    "encoding/binary"
+    "math/rand"
+
+    "github.com/db47h/rand64/iorand"
+)
+
+// Wrap crypto/rand in an IoRand
+func main() {
+    // first, wrap crypto/rand.Reader in a buffered bufio.Reader
+    bufferedReader := bufio.NewReader(crand.Reader)
+    // Create the new IoRand Source
+    ior := iorand.New(bufferedReader, binary.LittleEndian)
+    // use it as rand.Source64
+    rng := rand.New(ior)
+    // get random numbers...
+    for i := 0; i < 4; i++ {
+        _ = rng.Uint64()
+    }
+}
+```
+
+## Benchmarks
+
+These benchmarks where done with go 1.9.1.
+
+As mentioned on the [PRNG shootout][PRNGSHoutout] page, benhmark results can
+vary greatly depending on compiler and hardware. Also according to the authors,
+xoroshiro should be faster than the xorshift algorithms, this is not the case
+on any of the tested hardware, so there's probably some room for optimization
+in the Go implementation.
 
 The last result is for the default PRNG provided by the standard library's
 rand.NewSource() for comparison:
 
-    Splitmix64           	300000000	         4.35 ns/op
-    XorShift128roplus    	300000000	         5.14 ns/op
-    XorShift128plus      	300000000	         4.92 ns/op
-    XorShift1024star     	200000000	         6.46 ns/op
-    Mt19937              	200000000	         9.12 ns/op
-    GoRand              	200000000	         6.40 ns/op
+| Algorithm     | AMD FX-6300 | Celeron-M 410 | IntARM Cortex-A7 |
+|---------------|------------:|--------------:|-----------------:|
+| xoroshiro128+ |  4.15 ns/op |    13.6 ns/op |       33.4 ns/op |
+| xorshift128+  |  3.52 ns/op |    11.6 ns/op |       29.5 ns/op |
+| xorshift1024* |  3.74 ns/op |    18.9 ns/op |       50.7 ns/op |
+| splitmix64    |  2.19 ns/op |     5.4 ns/op |       15.3 ns/op |
+| MT19937       |  8.80 ns/op |    53.3 ns/op |      137.0 ns/op |
+| GoRand        |  7.34 ns/op |    22.8 ns/op |       80.4 ns/op |
 
-[1]: According to the authors of the algorithms, the xoroshiro128+ algorithm
-should be significantly faster than xorshift128+. As seen in the benchmarks, it
-is in fact just a little slower even though Go 1.6.2 and 1.7 properly *do*
-translate the simulated rotate into a single rotate instruction on x86_64.
+## Documentation
 
-# Documentation
+For the xorshift and xoroshiro generators, the lowest bits of this generator
+are LSFRs (linear-feeedback shift registers), and thus they are slightly less
+random than the other bits. It is therefore recommended to use a sign test in
+order to extract boolean values (i.e. check the high order bit).
 
-You can browse the package documentation online at http://godoc.org/github.com/db47h/rand64
+[PRNGShoutout]: http://xoroshiro.di.unimi.it/
+[travisImg]: https://travis-ci.org/db47h/rand64.svg?branch=master
+[travis]: https://travis-ci.org/db47h/rand64
+[goreportImg]: https://goreportcard.com/badge/github.com/db47h/rand64
+[goreport]: https://goreportcard.com/report/github.com/db47h/rand64
+[godocImg]: https://godoc.org/github.com/db47h/rand64?status.svg
+[godoc]: http://godoc.org/github.com/db47h/rand64

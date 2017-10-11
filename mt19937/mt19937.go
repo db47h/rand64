@@ -12,14 +12,11 @@ This is a pure Go implementation based on the mt19937-64.c C implementation
 by Makoto Matsumoto and Takuji Nishimura.
 
 More information on the Mersenne Twister algorithm and other implementations
-are available from
-http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/emt.html
+are available from http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/emt.html
 
 See included LICENSE_MT for original C code and license.
 */
 package mt19937
-
-import "github.com/db47h/rand64"
 
 const (
 	_NN      = 312
@@ -27,7 +24,6 @@ const (
 	_MatrixA = 0xB5026F5AA96619E9
 	_UM      = 0xFFFFFFFF80000000 // Most significant 33 bits
 	_LM      = 0x7FFFFFFF         // Least significant 31 bits
-	_NSeed   = _NN + 1            // index==NN+1 means mt[NN] is not initialized
 )
 
 var mag01 = [...]uint64{
@@ -35,36 +31,40 @@ var mag01 = [...]uint64{
 	_MatrixA,
 }
 
-type mt19937 struct {
+// Rng wraps the state data for the MT19937 pseudo-random number generator.
+//
+type Rng struct {
 	state [_NN]uint64 // State vector
+	// index is used in descending order (opposite to the original C version).
+	// Thus, an uninitialized Rng has index = 0 instead of NN+1. This allows the use
+	// of a Rng{} struct literal as a valid PRNG and exhibit the same behavior as the
+	// C version if generating values without seeding.
 	index uint64
 }
 
-// New returns a new pseudo-random Source using the MT19937 algorithm.
-func New() rand64.Source {
-	return &mt19937{index: _NSeed}
-}
-
-// Seed64 uses the provided uint64 seed value to initialize the generator to a deterministic state
+// Seed uses the provided uint64 seed value to initialize the generator to a deterministic state.
 //
-// If Seed is 0, a default seed will be used (5489).
-func (rng *mt19937) Seed(seed uint64) {
+// If Seed is 0, the generator will be seeded with the same default value as in the original C code (5489).
+//
+func (rng *Rng) Seed(seed int64) {
 	var i uint64
 	mt := rng.state[:]
 
 	if seed == 0 {
-		seed = 5489 // same default seed as original C code
+		seed = 5489
 	}
 
-	mt[0] = seed
+	mt[0] = uint64(seed)
 	for i = 1; i < _NN; i++ {
 		mt[i] = 6364136223846793005*(mt[i-1]^(mt[i-1]>>62)) + i
 	}
-	rng.index = i
+	rng.index = 1
 }
 
-// SeedBySlice initializes the state array with data from slice key
-func (rng *mt19937) SeedFromSlice(key []uint64) {
+// SeedFromSlice initializes the state array with data from slice key. This function behaves
+// exactly like init_by_array() in the original C code.
+//
+func (rng *Rng) SeedFromSlice(key []uint64) {
 	var (
 		i uint64 = 1
 		j uint64
@@ -100,16 +100,17 @@ func (rng *mt19937) SeedFromSlice(key []uint64) {
 	mt[0] = 1 << 63
 }
 
-// Uint64 generates a random number on [0, 2^64-1]-interval
-func (rng *mt19937) Uint64() uint64 {
+// Uint64 returns a pseudo-random 64-bit value as a uint64.
+//
+func (rng *Rng) Uint64() uint64 {
 	var i int
 	var x uint64
 	mt := rng.state[:]
 	mti := rng.index
 
-	if mti >= _NN { // generate _NN words at once
+	if mti <= 1 { // generate _NN words at once
 		// seed if needed
-		if mti == _NSeed {
+		if mti == 0 {
 			rng.Seed(5489)
 		}
 
@@ -124,11 +125,11 @@ func (rng *mt19937) Uint64() uint64 {
 		x = (mt[_NN-1] & _UM) | (mt[0] & _LM)
 		mt[_NN-1] = mt[_MM-1] ^ (x >> 1) ^ mag01[x&1]
 
-		mti = 0
+		mti = _NN + 1
 	}
 
-	x = mt[mti]
-	rng.index = mti + 1
+	x = mt[_NN+1-mti]
+	rng.index = mti - 1
 
 	x ^= (x >> 29) & 0x5555555555555555
 	x ^= (x << 17) & 0x71D67FFFEDA60000
@@ -136,4 +137,10 @@ func (rng *mt19937) Uint64() uint64 {
 	x ^= (x >> 43)
 
 	return x
+}
+
+// Int63 returns a non-negative pseudo-random 63-bit integer as an int64.
+//
+func (rng *Rng) Int63() int64 {
+	return int64(rng.Uint64() >> 1)
 }
