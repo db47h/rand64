@@ -132,23 +132,22 @@ func main() {
 
 These benchmarks where done with go 1.9.1.
 
-As mentioned on the [PRNG shootout][PRNGSHoutout] page, benhmark results can
-vary greatly depending on compiler and hardware. Also according to the authors,
-xoroshiro should be faster than the xorshift algorithms, this is not the case
-on any of the tested hardware, so there's probably some room for optimization
-in the Go implementation.
+According to the [PRNG shootout][PRNGSHoutout] page, xoroshiro should be faster
+than the xorshift algorithms. This is not the case on any of the tested
+hardware (even slower than xorshift1024* on AMD), so there's probably some room
+for optimization in the Go implementation.
 
 The last result is for the default PRNG provided by the standard library's
 rand.NewSource() for comparison:
 
-| Algorithm     | AMD FX-6300 | Celeron-M 410 | IntARM Cortex-A7 |
-|---------------|------------:|--------------:|-----------------:|
-| xoroshiro128+ |  4.15 ns/op |    13.6 ns/op |       33.4 ns/op |
-| xorshift128+  |  3.52 ns/op |    11.6 ns/op |       29.5 ns/op |
-| xorshift1024* |  3.74 ns/op |    18.9 ns/op |       50.7 ns/op |
-| splitmix64    |  2.19 ns/op |     5.4 ns/op |       15.3 ns/op |
-| MT19937       |  8.80 ns/op |    53.3 ns/op |      137.0 ns/op |
-| GoRand        |  7.34 ns/op |    22.8 ns/op |       80.4 ns/op |
+| Algorithm     | AMD FX-6300 | Core i5 6200U | Celeron-M 410 | ARM Cortex-A7    |
+|---------------|------------:|--------------:|--------------:|-----------------:|
+| xoroshiro128+ |  3.96 ns/op |    2.42 ns/op | 13.6 ns/op    |       33.4 ns/op |
+| xorshift128+  |  3.53 ns/op |    2.26 ns/op | 11.6 ns/op    |       29.5 ns/op |
+| xorshift1024* |  3.75 ns/op |    3.01 ns/op | 18.9 ns/op    |       50.7 ns/op |
+| splitmix64    |  2.20 ns/op |    1.90 ns/op |  5.4 ns/op    |       15.3 ns/op |
+| MT19937       |  8.82 ns/op |    6.18 ns/op | 53.3 ns/op    |      137.0 ns/op |
+| GoRand        |  7.54 ns/op |    4.61 ns/op | 22.8 ns/op    |       80.4 ns/op |
 
 ## Documentation
 
