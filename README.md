@@ -151,10 +151,10 @@ rand.NewSource() for comparison:
 
 ## Documentation
 
-For the xorshift and xoroshiro generators, the lowest bits of this generator
-are LSFRs (linear-feeedback shift registers), and thus they are slightly less
-random than the other bits. It is therefore recommended to use a sign test in
-order to extract boolean values (i.e. check the high order bit).
+For the xorshift and xoroshiro generators, the lowest bits of the generated
+values are LSFRs (linear-feeedback shift registers), and thus they are slightly
+less random than the other bits. It is therefore recommended to use a sign test
+in order to extract boolean values (i.e. check the high order bit).
 
 [PRNGShoutout]: http://xoroshiro.di.unimi.it/
 [travisImg]: https://travis-ci.org/db47h/rand64.svg?branch=master
