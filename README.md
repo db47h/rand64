@@ -4,15 +4,16 @@
 [![Go Report Card][goreportImg]][goreport]
 [![GoDoc][godocImg]][godoc]
 
-Package rand64 provides pseudo random number generators yielding unsinged 64
+Package rand64 provides pseudo random number generators yielding unsigned 64
 bits numbers in the range \[0, 2<sup>64</sup>).
 
 Implementations for the following pseudo random number generators are provided
 in their own packages:
 
 - splitmix64, a 64 bits SplittableRandom PRNG. Mostly used as a seeder for the other PRNGs.
-- xorshift128+
-- xorshift1024*
+- xoshiro256**
+- xoshiro256+
+- xoroshiro128**
 - xoroshiro128+
 - io.Reader wrapper for PRNG sources.
 
@@ -24,10 +25,14 @@ Note that some algorithms make use of the bits package from Go 1.9.
 Creation of a PRNG looks like this:
 
 ```
-source := xoroshiro.Rng{}           // create source
-// wrap it in a rand.Rand wrapper that will provide more utility functions
+// create a source with the xoshiro256**
+source := &xoshiro.Rng256SS{}
+
+// use it as a source in rand.New
 rng := rand.New(&source)
-rng.Seed(int64Seed)              // Seed it from a single int64 (negative values are accepted)
+
+// Seed it from a single int64 (negative values are accepted)
+rng.Seed(int64Seed)
 ```
 
 ## Algorithms
@@ -38,51 +43,43 @@ This is a fixed-increment version of Java 8's [SplittableRandom](http://docs.ora
 
 Go implementation based on a C reference implementation by Sebastiano Vigna.
 
-### xorshift128+
+### xoshiro256** and xoshiro256+
 
-Period 2<sup>128</sup>-1
+Period 2<sup>256</sup>-1
 
-A 64-bit version of Saito and Matsumoto's XSadd generator. Instead of using a
-multiplication, it returns the sum (in Z/264Z) of two consecutive output of a
-xorshift generator. This generator is presently used in the JavaScript engines
-of Chrome, Firefox, Safari, Microsoft Edge. If you find its period too short
-for large-scale parallel simulations, use xorshift1024*.
+According to the algorithm authors:
 
-Go implementation based on a C reference implementation by Sebastiano Vigna.
+> xoshiro256** (XOR/shift/rotate) is our all-purpose, rock-solid generator (not
+> a cryptographically secure generator, though). It has excellent (sub-ns)
+> speed, a state space (256 bits) that is large enough for any parallel
+> application, and it passes all tests we are aware of.
+>
+> If, however, one has to generate only 64-bit floating-point numbers (by
+> extracting the upper 53 bits) xoshiro256+ is a slightly (≈15%) faster
+> generator with analogous statistical properties. For general usage, one has to
+> consider that its lowest bits have low linear complexity and will fail
+> linearity tests; however, low linear complexity can have hardly any impact in
+> practice, and certainly has no impact at all if you generate floating-point
+> numbers using the upper bits (we computed a precise estimate of the linear
+> complexity of the lowest bits).
 
-For more information, visit the [xoroshiro+ / xorshift* / xorshift+ generators and the PRNG shootout][PRNGSHoutout] page.
-
-### xorshift1024*
-
-Period 2<sup>1024</sup>-1
-
-A fast, high-quality PRNG. Numbers are obtained by scrambling the output of a
-Marsaglia xorshift generator with a 64-bit invertible multiplier.
-
-Go implementation based on a C reference implementation by Sebastiano Vigna.
-
-For more information, visit the [xoroshiro+ / xorshift* / xorshift+ generators and the PRNG shootout][PRNGSHoutout] page.
-
-### xoroshiro128+
+### xoroshiro128** and xoroshiro128+
 
 Period 2<sup>128</sup>-1
 
 According to the algorithm authors:
 
-> xoroshiro128+ (XOR/rotate/shift/rotate) is the successor to xorshift128+.
-> Instead of perpetuating Marsaglia's tradition of xorshift as a basic
-> operation, xoroshiro128+ uses a carefully handcrafted shift/rotate-based
-> linear transformation designed in collaboration with David Blackman. The
-> result is a significant improvement in speed (well below a nanosecond per
-> integer) and a significant improvement in statistical quality, as detected by
-> the long-range tests of PractRand. xoroshiro128+ is our current suggestion for
-> replacing low-quality generators commonly found in programming languages. It
-> is the default generator in Erlang.
+> xoroshiro128** (XOR/rotate/shift/rotate) and xoroshiro128+ have the same speed
+> than xoshiro256 and use half of the space; the same comments apply. They are
+> suitable only for low-scale parallel applications; moreover, xoroshiro128+
+> exhibits a mild dependency in Hamming weights that generates a failure after 5
+> TB of output in our test. We believe this slight bias cannot affect any
+> application.
 
 Go implementation based on a C reference implementation by David Blackman and
 Sebastiano Vigna.
 
-For more information, visit the [xoroshiro+ / xorshift* / xorshift+ generators and the PRNG shootout][PRNGSHoutout] page.
+For more information, visit the [xoshiro / xoroshiro generators and the PRNG shootout][PRNGSHoutout] page.
 
 ### MT19937-64
 period 2<sup>19937</sup>-1
@@ -92,6 +89,9 @@ by Makoto Matsumoto and Takuji Nishimura.
 
 More information on the Mersenne Twister algorithm and other implementations
 are available from http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/emt.html
+
+If you use this algorithm, please make sure that you comply with the
+accompanying license (see the license file mt19937/LICENSE_MT).
 
 ### io.Reader wrapper
 
@@ -110,7 +110,7 @@ import (
     "encoding/binary"
     "math/rand"
 
-    "github.com/db47h/rand64/iorand"
+    "github.com/db47h/rand64/v3/iorand"
 )
 
 // Wrap crypto/rand in an IoRand
@@ -130,33 +130,27 @@ func main() {
 
 ## Benchmarks
 
-These benchmarks where done with go 1.9.1.
-
-According to the [PRNG shootout][PRNGSHoutout] page, xoroshiro should be faster
-than the xorshift algorithms. This is not the case on any of the tested
-hardware (even slower than xorshift1024* on AMD), so there's probably some room
-for optimization in the Go implementation.
+These benchmarks where done with go 1.12.5
 
 The last result is for the default PRNG provided by the standard library's
 rand.NewSource() for comparison:
 
-| Algorithm     | AMD FX-6300 | Core i5 6200U | Celeron-M 410 | ARM Cortex-A7    |
-|---------------|------------:|--------------:|--------------:|-----------------:|
-| xoroshiro128+ |  3.96 ns/op |    2.42 ns/op | 13.6 ns/op    |       33.4 ns/op |
-| xorshift128+  |  3.53 ns/op |    2.26 ns/op | 11.6 ns/op    |       29.5 ns/op |
-| xorshift1024* |  3.75 ns/op |    3.01 ns/op | 18.9 ns/op    |       50.7 ns/op |
-| splitmix64    |  2.20 ns/op |    1.90 ns/op |  5.4 ns/op    |       15.3 ns/op |
-| MT19937       |  8.82 ns/op |    6.18 ns/op | 53.3 ns/op    |      137.0 ns/op |
-| GoRand        |  7.54 ns/op |    4.61 ns/op | 22.8 ns/op    |       80.4 ns/op |
+| Algorithm     | AMD FX-6300 | Core i5 6200U | ARM Cortex-A7    |
+|---------------|------------:|--------------:|-----------------:|
+| xoshiro256**  |  5.50 ns/op |               |                  |
+| xoshiro256+   |  5.48 ns/op |               |                  |
+| xoroshiro128**|  5.15 ns/op |               |                  |
+| xoroshiro128+ |  5.13 ns/op |               |                  |
+| splitmix64    |  4.31 ns/op |               |                  |
+| MT19937       |  8.91 ns/op |               |                  |
+| GoRand        |  6.62 ns/op |               |                  |
 
-## Documentation
+Note that the benchmarks show slower performance compared to earlier releases.
+This is due to the fact that we did call Rng.Uint64 directly instead of going
+through the rand.Rand64 interface. In order to do a fair comparison with the Go
+standard library's rng, all benchmarks now through a rand.Source64 interface.
 
-For the xorshift and xoroshiro generators, the lowest bits of the generated
-values are LSFRs (linear-feeedback shift registers), and thus they are slightly
-less random than the other bits. It is therefore recommended to use a sign test
-in order to extract boolean values (i.e. check the high order bit).
-
-[PRNGShoutout]: http://xoroshiro.di.unimi.it/
+[PRNGShoutout]: http://xoshiro.di.unimi.it/
 [travisImg]: https://travis-ci.org/db47h/rand64.svg?branch=master
 [travis]: https://travis-ci.org/db47h/rand64
 [goreportImg]: https://goreportcard.com/badge/github.com/db47h/rand64

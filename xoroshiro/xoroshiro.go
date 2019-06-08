@@ -1,10 +1,10 @@
-// Copyright 2014 Denis Bernard. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// Copyright (c) 2014-2019, Denis Bernard <db047h@gmail.com>
+// Use of this source code is governed by the ISC license that
+// can be found in the LICENSE file.
 
 /*
 Package xoroshiro provides an implementation for a pseudo-random number
-generator (PRNG) using the xoroshiro128** and xoroshiro128+ algorithm.
+generator (PRNG) using the xoroshiro128** and xoroshiro128+ algorithms.
 
 Period: 2^128-1. State size: 128 bits.
 
@@ -20,6 +20,23 @@ import (
 )
 
 // Rng128P encapsulates a xoroshiro128+ PRNG.
+//
+// xoroshiro128+ 1.0 is Blackman & Vigna's best and fastest small-state
+// generator for floating-point numbers. They suggest to use its upper bits for
+// floating-point generation, as it is slightly faster than xoroshiro128**. It
+// passes all tests the authors are aware of except for the four lower bits,
+// which might fail linearity tests (and just those), so if low linear
+// complexity is not considered an issue (as it is usually the case) it can be
+// used to generate 64-bit outputs, too; moreover, this generator has a very
+// mild Hamming-weight dependency making our test
+// (http://prng.di.unimi.it/hwd.php) fail after 5 TB of output; the authors
+// believe this slight bias cannot affect any application. If you are concerned,
+// use xoroshiro128** or xoshiro256+.
+//
+// The authors suggest to use a sign test to extract a random Boolean value, and
+// right shifts to extract subsets of bits.
+//
+// Note that the Go implementation of Rand.Float64 uses the upper bits as suggested.
 //
 type Rng128P struct {
 	s0, s1 uint64
@@ -55,6 +72,13 @@ func (rng *Rng128P) Int63() int64 {
 }
 
 // Rng128SS encapsulates a xoroshiro128** PRNG.
+//
+// xoroshiro128** 1.0 is Blackman & Vigna's all-purpose, rock-solid, small-state
+// generator. It is extremely (sub-ns) fast and it passes all tests we are
+// aware of, but its state space is large enough only for mild parallelism.
+//
+// For generating just floating-point numbers, xoroshiro128+ is even
+// faster (but it has a very mild bias, see notes in the comments).
 //
 type Rng128SS struct {
 	s0, s1 uint64

@@ -1,7 +1,3 @@
-// Copyright 2014 Denis Bernard. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
-
 package rand64_test
 
 import (
@@ -11,8 +7,7 @@ import (
 	"github.com/db47h/rand64/v3/mt19937"
 	"github.com/db47h/rand64/v3/splitmix64"
 	"github.com/db47h/rand64/v3/xoroshiro"
-	"github.com/db47h/rand64/v3/xorshift1024"
-	"github.com/db47h/rand64/v3/xorshift128"
+	"github.com/db47h/rand64/v3/xoshiro"
 )
 
 const (
@@ -49,16 +44,16 @@ func BenchmarkXoroshiro128plus(b *testing.B) {
 	}
 }
 
-func BenchmarkXorShift128plus(b *testing.B) {
-	s := rand.Source64(&xorshift128.Rng{})
+func BenchmarkXoshiro256starstar(b *testing.B) {
+	s := rand.Source64(&xoshiro.Rng256SS{})
 	s.Seed(SEED1)
 	for i := 0; i < b.N; i++ {
 		_ = s.Uint64()
 	}
 }
 
-func BenchmarkXorShift1024star(b *testing.B) {
-	s := rand.Source64(&xorshift1024.Rng{})
+func BenchmarkXoshiro256plus(b *testing.B) {
+	s := rand.Source64(&xoshiro.Rng256P{})
 	s.Seed(SEED1)
 	for i := 0; i < b.N; i++ {
 		_ = s.Uint64()
