@@ -21,7 +21,7 @@ sign test in order to extract boolean values (i.e. check the high order bit).
 package xorshift128
 
 import (
-	"github.com/db47h/rand64/splitmix64"
+	"github.com/db47h/rand64/v3/splitmix64"
 )
 
 // Rng encapsulates a xsorshift128+ PRNG.

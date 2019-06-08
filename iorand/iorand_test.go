@@ -14,7 +14,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/db47h/rand64/iorand"
+	"github.com/db47h/rand64/v3/iorand"
 )
 
 // Wrap crypto/rand in an IoRand

@@ -5,15 +5,14 @@
 package rand64_test
 
 import (
-	"fmt"
 	"math/rand"
 	"testing"
 
-	"github.com/db47h/rand64/mt19937"
-	"github.com/db47h/rand64/splitmix64"
-	"github.com/db47h/rand64/xoroshiro"
-	"github.com/db47h/rand64/xorshift1024"
-	"github.com/db47h/rand64/xorshift128"
+	"github.com/db47h/rand64/v3/mt19937"
+	"github.com/db47h/rand64/v3/splitmix64"
+	"github.com/db47h/rand64/v3/xoroshiro"
+	"github.com/db47h/rand64/v3/xorshift1024"
+	"github.com/db47h/rand64/v3/xorshift128"
 )
 
 const (
@@ -25,79 +24,25 @@ const (
 // splitmix64 PRNG.
 func Example() {
 	// create a Rand wrapper around a Source64 PRNG
-	rng := rand.New(&xoroshiro.Rng{})
+	rng := rand.New(&xoroshiro.Rng128SS{})
 	// seed the PRNG.
 	rng.Seed(SEED1)
 	// pull values
 	_ = rng.Uint64()
 }
 
-func Example_verbose() {
-	// simple testing function
-	// takes a rand64.Source and gets a bunch of numbers using
-	// math.rand and rand64
-	testfunc := func(name string, s rand.Source64) {
-		fmt.Println(name)
-		// Using Rand
-		r64 := rand.New(s)
-		for i := 0; i < 4; i++ {
-			fmt.Printf(" %d", r64.Uint32())
-		}
-		fmt.Println("")
-		for i := 0; i < 4; i++ {
-			fmt.Printf(" %d", r64.Uint64())
-		}
-		fmt.Println("")
-		// Play craps
-		for i := 0; i < 10; i++ {
-			fmt.Printf(" %d%d", r64.Intn(6)+1, r64.Intn(6)+1)
-		}
-		fmt.Println("")
-	}
-
-	// create a new splitmix64 source and seed it before use
-	// Typically a non-fixed seed should be used, such as time.Now().UnixNano().
-	// Using a fixed seed will produce the same output on every run.
-	var s rand.Source64 = new(splitmix64.Rng)
-
-	// pull some numbers
-	testfunc("splitmix64", s)
-
-	// test the other PRNGs
-	s = &xoroshiro.Rng{}
-	s.Seed(SEED1)
-	testfunc("xoroshiro128+", s)
-	s = &xorshift128.Rng{}
-	s.Seed(SEED1)
-	testfunc("xorshift128+", s)
-	s = &xorshift1024.Rng{}
-	s.Seed(SEED1)
-	testfunc("xorshift1024*", s)
-
-	// Output:
-	//
-	// splitmix64
-	//  3793791033 1853398634 113532184 4169906344
-	//  1961750202426094747 6038094601263162090 3207296026000306913 14232521865600346940
-	//  11 53 25 26 31 32 64 14 15 31
-	// xoroshiro128+
-	//  3672052799 3619036596 1817626404 4154021231
-	//  13508242557925574888 11509836612120350102 17607668528363997996 9787171209907982739
-	//  15 62 25 41 36 61 43 53 41 25
-	// xorshift128+
-	//  3672052799 2300942069 2356831912 2316732845
-	//  5560898047753517047 9806550241747869425 16344204150069124721 7133254478284829050
-	//  35 41 43 12 15 32 45 45 42 64
-	// xorshift1024*
-	//  3332849200 1164738618 456220800 3523432244
-	//  10311270752396438174 3766918502733849924 15396074446274990069 15679784721060022461
-	//  26 55 15 62 52 26 16 66 34 52
-}
-
 /* Benchmarks */
 
+func BenchmarkXoroshiro128starstar(b *testing.B) {
+	s := rand.Source64(&xoroshiro.Rng128SS{})
+	s.Seed(SEED1)
+	for i := 0; i < b.N; i++ {
+		_ = s.Uint64()
+	}
+}
+
 func BenchmarkXoroshiro128plus(b *testing.B) {
-	s := &xoroshiro.Rng{}
+	s := rand.Source64(&xoroshiro.Rng128P{})
 	s.Seed(SEED1)
 	for i := 0; i < b.N; i++ {
 		_ = s.Uint64()
@@ -105,7 +50,7 @@ func BenchmarkXoroshiro128plus(b *testing.B) {
 }
 
 func BenchmarkXorShift128plus(b *testing.B) {
-	s := &xorshift128.Rng{}
+	s := rand.Source64(&xorshift128.Rng{})
 	s.Seed(SEED1)
 	for i := 0; i < b.N; i++ {
 		_ = s.Uint64()
@@ -113,7 +58,7 @@ func BenchmarkXorShift128plus(b *testing.B) {
 }
 
 func BenchmarkXorShift1024star(b *testing.B) {
-	s := &xorshift1024.Rng{}
+	s := rand.Source64(&xorshift1024.Rng{})
 	s.Seed(SEED1)
 	for i := 0; i < b.N; i++ {
 		_ = s.Uint64()
@@ -121,7 +66,7 @@ func BenchmarkXorShift1024star(b *testing.B) {
 }
 
 func BenchmarkSplitmix64(b *testing.B) {
-	s := splitmix64.Rng{}
+	s := rand.Source64(&splitmix64.Rng{})
 	s.Seed(SEED1)
 	for i := 0; i < b.N; i++ {
 		_ = s.Uint64()
@@ -129,7 +74,7 @@ func BenchmarkSplitmix64(b *testing.B) {
 }
 
 func BenchmarkMt19937(b *testing.B) {
-	s := mt19937.Rng{}
+	s := rand.Source64(&mt19937.Rng{})
 	s.Seed(SEED1)
 	for i := 0; i < b.N; i++ {
 		_ = s.Uint64()
@@ -137,8 +82,8 @@ func BenchmarkMt19937(b *testing.B) {
 }
 
 func BenchmarkGoRand(b *testing.B) {
-	s := rand.NewSource(SEED1)
+	s := rand.NewSource(SEED1).(rand.Source64)
 	for i := 0; i < b.N; i++ {
-		_ = s.Int63()
+		_ = s.Uint64()
 	}
 }
