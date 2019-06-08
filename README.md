@@ -150,6 +150,12 @@ This is due to the fact that we did call Rng.Uint64 directly instead of going
 through the rand.Rand64 interface. In order to do a fair comparison with the Go
 standard library's rng, all benchmarks now through a rand.Source64 interface.
 
+## Go module support
+
+rand64 supports go modules. Previous versions 1.x and 2.x have been moved to
+their respective branches. Since semver tags with no go.mod seemed to upset go
+modules, tags for these versions have been reset.
+
 [PRNGShoutout]: http://xoshiro.di.unimi.it/
 [travisImg]: https://travis-ci.org/db47h/rand64.svg?branch=master
 [travis]: https://travis-ci.org/db47h/rand64
