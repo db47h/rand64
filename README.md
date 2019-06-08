@@ -135,15 +135,15 @@ These benchmarks where done with go 1.12.5
 The last result is for the default PRNG provided by the standard library's
 rand.NewSource() for comparison:
 
-| Algorithm     | AMD FX-6300 | Core i5 6200U | ARM Cortex-A7    |
+| Algorithm     | AMD FX-6300 | Core i5 6200U | ARM Cortex-A7 @900MHz |
 |---------------|------------:|--------------:|-----------------:|
-| xoshiro256**  |  5.50 ns/op |               |                  |
-| xoshiro256+   |  5.48 ns/op |               |                  |
-| xoroshiro128**|  5.15 ns/op |               |                  |
-| xoroshiro128+ |  5.13 ns/op |               |                  |
-| splitmix64    |  4.31 ns/op |               |                  |
-| MT19937       |  8.91 ns/op |               |                  |
-| GoRand        |  6.62 ns/op |               |                  |
+| xoshiro256**  |  5.50 ns/op |               |      106.0 ns/op |
+| xoshiro256+   |  5.48 ns/op |               |       86.1 ns/op |
+| xoroshiro128**|  5.15 ns/op |               |       79.2 ns/op |
+| xoroshiro128+ |  5.13 ns/op |               |       62.7 ns/op |
+| splitmix64    |  4.31 ns/op |               |       77.5 ns/op |
+| MT19937       |  8.91 ns/op |               |      136.0 ns/op |
+| GoRand        |  6.62 ns/op |               |       68.4 ns/op |
 
 Note that the benchmarks show slower performance compared to earlier releases.
 This is due to the fact that we did call Rng.Uint64 directly instead of going
