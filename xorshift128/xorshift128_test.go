@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"math/rand"
 
-	"github.com/db47h/rand64/xorshift128"
+	"github.com/db47h/rand64/v2/xorshift128"
 )
 
 const (

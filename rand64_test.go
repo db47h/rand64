@@ -9,11 +9,11 @@ import (
 	"math/rand"
 	"testing"
 
-	"github.com/db47h/rand64/mt19937"
-	"github.com/db47h/rand64/splitmix64"
-	"github.com/db47h/rand64/xoroshiro"
-	"github.com/db47h/rand64/xorshift1024"
-	"github.com/db47h/rand64/xorshift128"
+	"github.com/db47h/rand64/v2/mt19937"
+	"github.com/db47h/rand64/v2/splitmix64"
+	"github.com/db47h/rand64/v2/xoroshiro"
+	"github.com/db47h/rand64/v2/xorshift1024"
+	"github.com/db47h/rand64/v2/xorshift128"
 )
 
 const (

@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/db47h/rand64/mt19937"
+	"github.com/db47h/rand64/v2/mt19937"
 )
 
 func Example() {

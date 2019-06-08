@@ -25,7 +25,7 @@ package xoroshiro
 import (
 	"math/bits"
 
-	"github.com/db47h/rand64/splitmix64"
+	"github.com/db47h/rand64/v2/splitmix64"
 )
 
 // Rng encapsulates a splitmix64 PRNG.

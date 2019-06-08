@@ -19,7 +19,7 @@ bit).
 package xorshift1024
 
 import (
-	"github.com/db47h/rand64/splitmix64"
+	"github.com/db47h/rand64/v2/splitmix64"
 )
 
 // Rng encapsulates an xorshift 1024* PRNG.
