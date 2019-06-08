@@ -1,4 +1,4 @@
-TARGETS := splitmix64 xoroshiro128plus xorshift128plus xorshift1024star
+TARGETS := splitmix64 xoroshiro128plus xoroshiro128starstar xoshiro256plus xoshiro256starstar
 
 .PHONY: all
 
@@ -10,11 +10,14 @@ splitmix64: splitmix64.c splitmix64_main.c
 xoroshiro128plus: splitmix64.c xoroshiro128plus.c main.c
 	$(CC) -Wall -DSTATE=2 -o $@ $^
 
-xorshift128plus: splitmix64.c xorshift128plus.c main.c
+xoroshiro128starstar: splitmix64.c xoroshiro128starstar.c main.c
 	$(CC) -Wall -DSTATE=2 -o $@ $^
 
-xorshift1024star: splitmix64.c xorshift1024star.c main.c
-	$(CC) -Wall -DSTATE=16 -o $@ $^
+xoshiro256plus: splitmix64.c xoshiro256plus.c main.c
+	$(CC) -Wall -DSTATE=4 -o $@ $^
+
+xoshiro256starstar: splitmix64.c xoshiro256starstar.c main.c
+	$(CC) -Wall -DSTATE=4 -o $@ $^
 
 clean:
 	rm -f *.o $(TARGETS)
