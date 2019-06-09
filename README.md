@@ -11,10 +11,8 @@ Implementations for the following pseudo random number generators are provided
 in their own packages:
 
 - splitmix64, a 64 bits SplittableRandom PRNG. Mostly used as a seeder for the other PRNGs.
-- xoshiro256**
-- xoshiro256+
-- xoroshiro128**
-- xoroshiro128+
+- xoshiro256** and xoshiro256+
+- xoroshiro128** and xoroshiro128+
 - io.Reader wrapper for PRNG sources.
 
 These generetors implement rand.Source64, so they can be used as source for
@@ -81,17 +79,38 @@ Sebastiano Vigna.
 
 For more information, visit the [xoshiro / xoroshiro generators and the PRNG shootout][PRNGSHoutout] page.
 
-### MT19937-64
-period 2<sup>19937</sup>-1
+### PCG
 
-This is a pure Go implementation based on the mt19937-64.c C implementation
-by Makoto Matsumoto and Takuji Nishimura.
+Period 2<sup>128</sup>
+
+This is a permuted congruential generator as defined in
+
+> PCG: A Family of Simple Fast Space-Efficient Statistically Good Algorithms for Random Number Generation
+>
+> Melissa E. O'Neill, Harvey Mudd College
+> 
+> https://www.cs.hmc.edu/tr/hmc-cs-2014-0905.pdf
+
+While `PCG` refers to a whole family of algorithms (see also
+http://pcg-random.org), the only provided algorithm is PCG XSL RR 128/64 LCG.
+
+Go implementation based on the C reference implementation by Melissa O'Neill and
+the PCG Project contributors.
+
+### MT19937-64
+
+Period 2<sup>19937</sup>-1
+
+This is a pure Go implementation based on the mt19937-64.c C implementation by
+Makoto Matsumoto and Takuji Nishimura.
 
 More information on the Mersenne Twister algorithm and other implementations
 are available from http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/emt.html
 
-If you use this algorithm, please make sure that you comply with the
-accompanying license (see the license file mt19937/LICENSE_MT).
+Note that this algorithm is only intended for applications that need
+interoperability with other applications using this same algorithm. As it is
+known to fail trivial statistical tests and is the slowest on amd64, its use for
+any other purpose is not recommended.
 
 ### io.Reader wrapper
 
@@ -130,31 +149,50 @@ func main() {
 
 ## Benchmarks
 
-These benchmarks where done with go 1.12.5
+These benchmarks where done with go 1.12.5.
 
-The last result is for the default PRNG provided by the standard library's
-rand.NewSource() for comparison:
-
-| Algorithm     | AMD FX-6300 | Core i5 6200U | ARM Cortex-A7 @900MHz |
-|---------------|------------:|--------------:|-----------------:|
-| xoshiro256**  |  5.50 ns/op |               |      106.0 ns/op |
-| xoshiro256+   |  5.48 ns/op |               |       86.1 ns/op |
-| xoroshiro128**|  5.15 ns/op |               |       79.2 ns/op |
-| xoroshiro128+ |  5.13 ns/op |               |       62.7 ns/op |
-| splitmix64    |  4.31 ns/op |               |       77.5 ns/op |
-| MT19937       |  8.91 ns/op |               |      136.0 ns/op |
-| GoRand        |  6.62 ns/op |               |       68.4 ns/op |
+| Algorithm              | AMD FX-6300 | Core i5 6200U | ARM Cortex-A7 @900MHz |
+|------------------------|------------:|--------------:|-----------------:|
+| xoshiro256**           |  5.53 ns/op |               |      106.0 ns/op |
+| xoshiro256+            |  5.48 ns/op |               |       86.1 ns/op |
+| xoroshiro128**         |  5.16 ns/op |               |       79.2 ns/op |
+| xoroshiro128+          |  5.15 ns/op |               |       62.7 ns/op |
+| PCG XSL RR 128/64 LCG  |  5.29 ns/op |               |      254.0 ns/op |
+| splitmix64             |  4.30 ns/op |               |       77.5 ns/op |
+| Mersenne Twister 19937 |  8.82 ns/op |               |      136.0 ns/op |
+| Go math/rand           |  7.01 ns/op |               |       68.4 ns/op |
 
 Note that the benchmarks show slower performance compared to earlier releases.
 This is due to the fact that we did call Rng.Uint64 directly instead of going
 through the rand.Rand64 interface. In order to do a fair comparison with the Go
-standard library's rng, all benchmarks now through a rand.Source64 interface.
+standard library's rng, all benchmarks now go through a rand.Source64 interface.
+
+## Which algorithm to pick
+
+Stay away from splitmix64 and the venerable Mersenne-Twister 19937.
+
+Very little is known about Go's math/rand (see [here][gorand1], [here][gorand2])
+and there's a [proposal] to replace it with a PCG generator.
+
+The provided PCG, xoshiro256** and xoroshiro128** are reputed to pass all known
+tests; according to their respective authors. Watch out for the poor performance
+of this particular PCG algorithm on 32bits platforms though (affects both ARM
+and x86).
 
 ## Go module support
 
 rand64 supports go modules. Previous versions 1.x and 2.x have been moved to
 their respective branches. Since semver tags with no go.mod seemed to upset go
 modules, tags for these versions have been reset.
+
+## License
+
+This package is released under the terms of the ISC license (see LICENSE file at
+the root of the repository). Moreover, use of the following algorithms is governed by
+additional licenses:
+
+- PCG: MIT (see LICENSE-pcg)
+- MT 19937: BSD 3-clause license (see LICENSE-mt19937)
 
 [PRNGShoutout]: http://xoshiro.di.unimi.it/
 [travisImg]: https://travis-ci.org/db47h/rand64.svg?branch=master
@@ -163,3 +201,6 @@ modules, tags for these versions have been reset.
 [goreport]: https://goreportcard.com/report/github.com/db47h/rand64
 [godocImg]: https://godoc.org/github.com/db47h/rand64?status.svg
 [godoc]: http://godoc.org/github.com/db47h/rand64
+[gorand1]: https://groups.google.com/d/msg/golang-nuts/NhTR30gCouo/6xnLzGqlz0oJ
+[gorand2]: https://groups.google.com/d/msg/golang-nuts/RZ1G3_cxMcM/_7J7tnHhsU4J
+[proposal]: https://github.com/golang/go/issues/21835

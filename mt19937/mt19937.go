@@ -8,13 +8,14 @@ pseudo-random number generator (MT19937 PRNG).
 
 The state size is 312 uint64.
 
-This is a pure Go implementation based on the mt19937-64.c C implementation
-by Makoto Matsumoto and Takuji Nishimura.
+This is a pure Go implementation based on the mt19937-64.c C implementation by
+Makoto Matsumoto and Takuji Nishimura.
 
-More information on the Mersenne Twister algorithm and other implementations
-are available from http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/emt.html
+More information on the Mersenne Twister algorithm and other implementations are
+available from http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/emt.html
 
-See included LICENSE_MT for original C code and license.
+Use of this algorithm is governed by a BSD-style license that can be found in
+the LICENSE-mt19937 file.
 */
 package mt19937
 

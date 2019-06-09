@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/db47h/rand64/v3/mt19937"
+	"github.com/db47h/rand64/v3/pcg"
 	"github.com/db47h/rand64/v3/splitmix64"
 	"github.com/db47h/rand64/v3/xoroshiro"
 	"github.com/db47h/rand64/v3/xoshiro"
@@ -54,6 +55,14 @@ func BenchmarkXoshiro256starstar(b *testing.B) {
 
 func BenchmarkXoshiro256plus(b *testing.B) {
 	s := rand.Source64(&xoshiro.Rng256P{})
+	s.Seed(SEED1)
+	for i := 0; i < b.N; i++ {
+		_ = s.Uint64()
+	}
+}
+
+func BenchmarkPCG(b *testing.B) {
+	s := rand.Source64(&pcg.Rng{})
 	s.Seed(SEED1)
 	for i := 0; i < b.N; i++ {
 		_ = s.Uint64()

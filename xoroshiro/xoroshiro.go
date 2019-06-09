@@ -74,11 +74,11 @@ func (rng *Rng128P) Int63() int64 {
 // Rng128SS encapsulates a xoroshiro128** PRNG.
 //
 // xoroshiro128** 1.0 is Blackman & Vigna's all-purpose, rock-solid, small-state
-// generator. It is extremely (sub-ns) fast and it passes all tests we are
-// aware of, but its state space is large enough only for mild parallelism.
+// generator. It is extremely (sub-ns) fast and it passes all tests the authors
+// are aware of, but its state space is large enough only for mild parallelism.
 //
-// For generating just floating-point numbers, xoroshiro128+ is even
-// faster (but it has a very mild bias, see notes in the comments).
+// For generating just floating-point numbers, xoroshiro128+ is even faster (but
+// it has a very mild bias, see notes in the comments).
 //
 type Rng128SS struct {
 	s0, s1 uint64
